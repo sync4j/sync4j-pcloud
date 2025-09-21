@@ -1,26 +1,38 @@
 package com.fathzer.sync4j.pcloud;
 
+import java.io.IOException;
+import java.util.List;
+
 import com.fathzer.sync4j.File;
-import com.pcloud.sdk.RemoteFile;
+import com.fathzer.sync4j.HashAlgorithm;
+import com.pcloud.sdk.RemoteEntry;
 
-public class PcloudFile implements File {
-    private final RemoteFile remoteFile;
+public class PcloudFile extends PcloudEntry {
 
-    public PcloudFile(RemoteFile remoteFile) {
-        this.remoteFile = remoteFile;
+    PcloudFile(RemoteEntry remoteEntry, PCloudProvider provider) {
+        super(remoteEntry, provider);
+        if (!remoteEntry.isFile()) {
+            throw new IllegalArgumentException("Not a file");
+        }
     }
 
     @Override
-    public String getName() {
-        return remoteFile.name();
+    public long getSize() {
+        return remoteEntry.asFile().size();
     }
 
     @Override
     public boolean isFile() {
-        return remoteFile.isFile();
+        return remoteEntry.isFile();
     }
 
-    RemoteFile getRemoteFile() {
-        return remoteFile;
+    @Override
+    public String getHash(HashAlgorithm hashAlgorithm) throws IOException {
+        return provider.getHash(remoteEntry.asFile(), hashAlgorithm);
+    }
+
+    @Override
+    public List<File> list() throws IOException {
+        throw new UnsupportedOperationException("Not supported");
     }
 }

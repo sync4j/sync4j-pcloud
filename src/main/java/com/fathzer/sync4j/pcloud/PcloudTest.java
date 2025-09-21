@@ -2,75 +2,62 @@ package com.fathzer.sync4j.pcloud;
 
 import static com.fathzer.sync4j.HashAlgorithm.SHA1;
 
-import java.math.BigInteger;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import com.pcloud.sdk.ApiClient;
-import com.pcloud.sdk.Authenticators;
-import com.pcloud.sdk.PCloudSdk;
-import com.pcloud.sdk.RemoteEntry;
-import com.pcloud.sdk.RemoteFolder;
-import com.pcloud.sdk.RemoteFile;
+import com.fathzer.sync4j.File;
 
 public class PcloudTest {
     private static final String INDENT = "    ";
+    private static final boolean WITH_HASH = false;
     
     public static void main(String[] args) throws Exception {
         final String accessToken = args[0];
+        final String path = "/PhotosJM";
         try (PCloudProvider pCloudManager = new PCloudProvider(accessToken)) {
 
-            ApiClient apiClient = PCloudSdk.newClientBuilder()
-                    .authenticator(Authenticators.newOAuthAuthenticator(accessToken))
-                    .create();
-            try {
-                // RemoteFolder rootFolder = apiClient.listFolder("/PhotosJM/2002", true).execute();
-                // System.out.println("Remote Folder Structure for: " + rootFolder.name());
-                // System.out.println("======================================");
-                // printFolderTree(rootFolder, "");
+            File rootFolder = pCloudManager.get(path, false);
+            System.out.println("Remote Folder Structure for: " + rootFolder.getName());
+            System.out.println("======================================");
+            long startTime = System.currentTimeMillis();
+            long size = printFolderTree((PcloudFolder)rootFolder, "");
+            System.out.println("Size: " + size+ " in " + (System.currentTimeMillis() - startTime) + "ms");
 
+            System.out.println("======================================");
+            System.out.println("Structure with fast-list: ");
+            System.out.println("======================================");
+            startTime = System.currentTimeMillis();
+            rootFolder = pCloudManager.get(path, true);
+            System.out.println("Size: " + size+ " in " + (System.currentTimeMillis() - startTime) + "ms");
 
-                Path localPath = Paths.get("/home/jma/tmp/photosTest/2002/Pict200205010005.jpg");
-                System.out.println("SHA1 Hash of file: " + SHA1.computeHash(localPath));
+            size = printFolderTree((PcloudFolder)rootFolder, "");
+            System.out.println("Size: " + size);
 
-                RemoteFile remoteFile = apiClient.loadFile("/PhotosJM/2002/Pict200205010005.jpg").execute();
-                System.out.println("SHA1 Hash of remote file: " + pCloudManager.getHash(new PcloudFile(remoteFile), SHA1));
+            Path localPath = Paths.get("/home/jma/tmp/photosTest/2002/Pict200205010005.jpg");
+            System.out.println("SHA1 Hash of file: " + SHA1.computeHash(localPath));
 
-                remoteFile = apiClient.loadFile("/testFuse.sh").execute();
-                System.out.println(remoteFile);
-                
+            File remoteFile = pCloudManager.get("/PhotosJM/2002/Pict200205010005.jpg", false);
+            System.out.println("SHA1 Hash of remote file: " + remoteFile.getHash(SHA1));
 
-            } catch (Exception e) {
-                System.err.println("Error accessing pCloud: " + e.getMessage());
-                e.printStackTrace();
-            } finally {
-                apiClient.shutdown();
-            }
+            File remoteFile2 = pCloudManager.get("/testFuse.sh", false);
+            System.out.println(remoteFile2);
         }
     }
     
-    private static void printFolderTree(RemoteFolder folder, String indent) {
-        if (folder == null || folder.children() == null) return;
-        
-        for (RemoteEntry entry : folder.children()) {
-            System.out.print(indent + "|");
+    private static long printFolderTree(PcloudFolder folder, String indent) throws IOException {
+        long size = 0;
+        for (File entry : folder.list()) {
+//            System.out.print(indent + "|");
+            size ++;
             if (entry.isFile()) {
-                RemoteFile file = entry.asFile();
-                String hash = file.hash();
-                hash = hash == null ? "no hash" : new BigInteger(hash).toString(16);
-                System.out.println("--- " + file.name() + " (" + file.size() + "B - " + file.lastModified() + " - Hash: " + hash + ")");
-            } else if (entry.isFolder()) {
-                RemoteFolder subFolder = entry.asFolder();
-                System.out.println("+-- " + subFolder.name() + "/");
-                printFolderTree(subFolder, indent + INDENT);
+                String hash = WITH_HASH ? " (" + entry.getHash(SHA1) + ")" : "";
+//                System.out.println("--- " + entry.getName() + " (" + entry.getSize() + "B - " + entry.getLastModified() + " - Hash: " + hash + ")");
+            } else {
+//                System.out.println("+-- " + entry.getName() + "/");
+                size += printFolderTree((PcloudFolder)entry, indent + INDENT);
             }
         }
-    }
-    
-    private static String formatFileSize(long size) {
-        if (size < 1024) return size + " B";
-        int exp = (int) (Math.log(size) / Math.log(1024));
-        String pre = "KMGTPE".charAt(exp-1) + "";
-        return String.format("%.1f %sB", size / Math.pow(1024, exp), pre);
+        return size;
     }
 }
