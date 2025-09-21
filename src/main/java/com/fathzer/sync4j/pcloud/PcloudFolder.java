@@ -39,7 +39,6 @@ public class PcloudFolder extends PcloudEntry {
             throw new IllegalArgumentException("Not a directory");
         }
         if (!this.recursivlyLoaded) {
-            System.out.println("Loading folder: " + getName());
             remoteEntry = provider.listFolder(remoteEntry.asFolder().folderId(), false);
         }
         return remoteEntry.asFolder().children().stream()

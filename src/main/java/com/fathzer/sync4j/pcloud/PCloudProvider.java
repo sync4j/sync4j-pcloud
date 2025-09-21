@@ -24,7 +24,7 @@ import com.pcloud.sdk.RemoteFile;
 import com.pcloud.sdk.RemoteFolder;
 
 //Note IOException encapsulate APIError that are described in the pCloud API documentation (https://docs.pcloud.com/errors/index.html)
-public class PCloudProvider implements FileProvider<PcloudEntry> {
+public class PCloudProvider implements FileProvider {
     private final ApiClient apiClient;
     private final URI apiURI;
     private final String token;
