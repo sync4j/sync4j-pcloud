@@ -1,9 +1,6 @@
 package com.fathzer.sync4j.pcloud;
 
-import java.io.IOException;
-
 import com.fathzer.sync4j.File;
-import com.fathzer.sync4j.HashAlgorithm;
 import com.pcloud.sdk.RemoteEntry;
 
 public abstract class PcloudEntry implements File {
@@ -16,30 +13,23 @@ public abstract class PcloudEntry implements File {
     }
 
     @Override
+    public boolean exists() {
+        return true;
+    }
+
+    @Override
     public String getName() {
         return remoteEntry.name();
     }
 
-    private void checkFile() {
-        if (!remoteEntry.isFile()) {
-            throw new IllegalArgumentException("Not a file");
-        }
+    @Override
+    public long getCreationTime() {
+        return remoteEntry.created().getTime();
     }
 
     @Override
     public long getLastModified() {
         return remoteEntry.lastModified().getTime();
-    }
-
-    @Override
-    public boolean isFile() {
-        return remoteEntry.isFile();
-    }
-
-    @Override
-    public String getHash(HashAlgorithm hashAlgorithm) throws IOException {
-        checkFile();
-        return provider.getHash(remoteEntry.asFile(), hashAlgorithm);
     }
 
     RemoteEntry getRemoteEntry() {
