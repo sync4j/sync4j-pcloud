@@ -1,9 +1,11 @@
 package com.fathzer.sync4j.pcloud;
 
-import com.fathzer.sync4j.File;
+import java.io.IOException;
+
+import com.fathzer.sync4j.Entry;
 import com.pcloud.sdk.RemoteEntry;
 
-public abstract class PcloudEntry implements File {
+public abstract class PcloudEntry implements Entry {
     protected RemoteEntry remoteEntry;
     protected final PCloudProvider provider;
 
@@ -22,16 +24,6 @@ public abstract class PcloudEntry implements File {
         return remoteEntry.name();
     }
 
-    @Override
-    public long getCreationTime() {
-        return remoteEntry.created().getTime();
-    }
-
-    @Override
-    public long getLastModified() {
-        return remoteEntry.lastModified().getTime();
-    }
-
     RemoteEntry getRemoteEntry() {
         return remoteEntry;
     }
@@ -39,5 +31,11 @@ public abstract class PcloudEntry implements File {
     @Override
     public String toString() {
         return remoteEntry.toString();
+    }
+
+    @Override
+    public void delete() throws IOException {
+        //TODO
+        throw new UnsupportedOperationException("Not implemented");
     }
 }

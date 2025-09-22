@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import com.fathzer.sync4j.Entry;
 import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.FileProvider;
+import com.fathzer.sync4j.Folder;
 import com.fathzer.sync4j.file.LocalProvider;
 
 public class PcloudTest {
@@ -24,15 +26,11 @@ public class PcloudTest {
             Path localPath = Paths.get("/home/jma/tmp/photosTest/2002/Pict200205010005.jpg");
             System.out.println("SHA1 Hash of file: " + SHA1.computeHash(localPath));
 
-            File remoteFile = provider.get("/PhotosJM/2002/Pict200205010005.jpg", false);
+            File remoteFile = provider.get("/PhotosJM/2002/Pict200205010005.jpg", false).asFile();
             System.out.println("SHA1 Hash of remote file: " + remoteFile.getHash(SHA1));
 
-            try {
-                File remoteFile2 = provider.get("/testFuse.sh", false);
-                System.out.println(remoteFile2);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            Entry remoteFile2 = provider.get("/testFuse.sh", false);
+            System.out.println(remoteFile2.getName()+" "+(remoteFile2.exists()?"exists":"not exists"));
         }
         try (LocalProvider provider = new LocalProvider()) {
             printTree(provider, "/home/jma/tmp/photosTest/2002");
@@ -40,35 +38,34 @@ public class PcloudTest {
     }
 
     private static void printTree(FileProvider provider, String rootPath) throws IOException {
-        File rootFolder = provider.get(rootPath, false);
-        System.out.println("Remote Folder Structure for: " + rootFolder.getName());
+        Folder rootFolder = provider.get(rootPath, false).asFolder();
         System.out.println("======================================");
+        System.out.println("Folder Structure for: " + provider.getClass().getSimpleName()+":"+rootFolder.getName());
+        System.out.println("--------------------------------------");
         long startTime = System.currentTimeMillis();
         long size = printFolderTree(rootFolder, "");
         System.out.println("Size: " + size+ " in " + (System.currentTimeMillis() - startTime) + "ms");
 
-        System.out.println("======================================");
-        System.out.println("Structure with fast-list: ");
-        System.out.println("======================================");
+        System.out.println("--------------------------------------");
+        System.out.println("Folder Structure (fast-list): ");
         startTime = System.currentTimeMillis();
-        rootFolder = provider.get(rootPath, true);
-        System.out.println("Size: " + size+ " in " + (System.currentTimeMillis() - startTime) + "ms");
-
+        rootFolder = provider.get(rootPath, true).asFolder();
         size = printFolderTree(rootFolder, "");
-        System.out.println("Size: " + size);
+        System.out.println("Size: " + size+ " in " + (System.currentTimeMillis() - startTime) + "ms");
+        System.out.println("======================================");
     }
     
-    private static long printFolderTree(File folder, String indent) throws IOException {
+    private static long printFolderTree(Folder folder, String indent) throws IOException {
         long size = 0;
-        for (File entry : folder.list()) {
+        for (Entry entry : folder.list()) {
 //            System.out.print(indent + "|");
             size ++;
             if (entry.isFile()) {
-                String hash = WITH_HASH ? " (" + entry.getHash(SHA1) + ")" : "";
+                String hash = WITH_HASH ? " (" + entry.asFile().getHash(SHA1) + ")" : "";
 //                System.out.println("--- " + entry.getName() + " (" + entry.getSize() + "B - " + entry.getLastModified() + " - Hash: " + hash + ")");
             } else {
 //                System.out.println("+-- " + entry.getName() + "/");
-                size += printFolderTree(entry, indent + INDENT);
+                size += printFolderTree(entry.asFolder(), indent + INDENT);
             }
         }
         return size;

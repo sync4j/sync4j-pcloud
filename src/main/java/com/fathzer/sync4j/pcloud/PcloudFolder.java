@@ -3,11 +3,11 @@ package com.fathzer.sync4j.pcloud;
 import java.io.IOException;
 import java.util.List;
 
-import com.fathzer.sync4j.File;
-import com.fathzer.sync4j.HashAlgorithm;
+import com.fathzer.sync4j.Entry;
+import com.fathzer.sync4j.Folder;
 import com.pcloud.sdk.RemoteEntry;
 
-public class PcloudFolder extends PcloudEntry {
+public class PcloudFolder extends PcloudEntry implements Folder {
     private final boolean recursivlyLoaded;
 
     PcloudFolder(RemoteEntry remoteEntry, PCloudProvider provider, boolean recursivlyLoaded) {
@@ -19,22 +19,17 @@ public class PcloudFolder extends PcloudEntry {
     }
 
     @Override
-    public long getSize() {
-        throw new UnsupportedOperationException("Not supported");
-    }
-
-    @Override
     public boolean isFile() {
         return false;
     }
 
     @Override
-    public String getHash(HashAlgorithm hashAlgorithm) throws IOException {
-        throw new UnsupportedOperationException("Not supported");
+    public boolean isFolder() {
+        return true;
     }
 
     @Override
-    public List<File> list() throws IOException {
+    public List<Entry> list() throws IOException {
         if (!remoteEntry.isFolder()) {
             throw new IllegalArgumentException("Not a directory");
         }
@@ -42,7 +37,7 @@ public class PcloudFolder extends PcloudEntry {
             remoteEntry = provider.listFolder(remoteEntry.asFolder().folderId(), false);
         }
         return remoteEntry.asFolder().children().stream()
-                .map(f -> (File)createEntry(f))
+                .map(f -> (Entry)createEntry(f))
                 .toList();
     }
 
