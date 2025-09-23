@@ -2,8 +2,10 @@ package com.fathzer.sync4j.pcloud;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.LongConsumer;
 
 import com.fathzer.sync4j.Entry;
+import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.Folder;
 import com.pcloud.sdk.RemoteEntry;
 
@@ -47,5 +49,10 @@ public class PcloudFolder extends PcloudEntry implements Folder {
         } else {
             return new PcloudFolder(remoteEntry, provider, this.recursivlyLoaded);
         }
+    }
+
+    @Override
+    public void copy(String fileName, File content, LongConsumer progressListener) throws IOException {
+        throw new UnsupportedOperationException("Not yet implemented"); //TODO
     }
 }

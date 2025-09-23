@@ -2,9 +2,12 @@ package com.fathzer.sync4j.pcloud;
 
 import static com.fathzer.sync4j.HashAlgorithm.SHA1;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.fathzer.sync4j.Entry;
 import com.fathzer.sync4j.File;
@@ -21,19 +24,54 @@ public class PcloudTest {
         final String path = "/PhotosJM/2002";
 
         try (PCloudProvider provider = new PCloudProvider(accessToken)) {
-            printTree(provider, path);
+            copyFile(provider.get("/The inside.mp4", false).asFile(), "/home/jma/tmp/");
 
-            Path localPath = Paths.get("/home/jma/tmp/photosTest/2002/Pict200205010005.jpg");
-            System.out.println("SHA1 Hash of file: " + SHA1.computeHash(localPath));
+        //     Entry entry = provider.get("/testFuse.sh", false);
+        //     System.out.println(entry.getName()+" "+(entry.exists() ? "exists" : "not exists"));
+        //     if (entry.isFile()) {
+        //         read(entry.asFile());
+        //     } else {
+        //         System.out.println("Not a file");
+        //     }
 
-            File remoteFile = provider.get("/PhotosJM/2002/Pict200205010005.jpg", false).asFile();
-            System.out.println("SHA1 Hash of remote file: " + remoteFile.getHash(SHA1));
+        //     printTree(provider, path);
 
-            Entry remoteFile2 = provider.get("/testFuse.sh", false);
-            System.out.println(remoteFile2.getName()+" "+(remoteFile2.exists()?"exists":"not exists"));
+        //     Path localPath = Paths.get("/home/jma/tmp/photosTest/2002/Pict200205010005.jpg");
+        //     System.out.println("SHA1 Hash of file: " + SHA1.computeHash(localPath));
+
+        //     File remoteFile = provider.get("/PhotosJM/2002/Pict200205010005.jpg", false).asFile();
+        //     System.out.println("SHA1 Hash of remote file: " + remoteFile.getHash(SHA1));
+
+        //     Entry remoteFile2 = provider.get("/testFuse.sh", false);
+        //     System.out.println(remoteFile2.getName()+" "+(remoteFile2.exists()?"exists":"not exists"));
+        // }
+        // try (LocalProvider provider = new LocalProvider()) {
+        //     printTree(provider, "/home/jma/tmp/photosTest/2002");
         }
+    }
+
+    private static void copyFile(File remoteFile, String localPath) throws IOException {
+        final long size = remoteFile.getSize();
+        final AtomicLong progress = new AtomicLong();
         try (LocalProvider provider = new LocalProvider()) {
-            printTree(provider, "/home/jma/tmp/photosTest/2002");
+            provider.get(localPath, false).asFolder().copy(remoteFile.getName(), remoteFile, x -> {
+                System.out.println("Copied " + (x - progress.getAndSet(x)) + "B");
+            });
+        }
+        System.out.println("Copied " + remoteFile.getName() + " to " + localPath + " (" + progress.get() +"/"+size + "B)");
+    }
+
+    private static void read(File file) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
+        try {
+            System.out.println("-------------------------");
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+            System.out.println("-------------------------");
+        } finally {
+            reader.close();
         }
     }
 
