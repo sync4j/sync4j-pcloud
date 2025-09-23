@@ -1,6 +1,7 @@
 package com.fathzer.sync4j.pcloud;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.HashAlgorithm;
@@ -43,5 +44,10 @@ public class PcloudFile extends PcloudEntry implements File {
     @Override
     public String getHash(HashAlgorithm hashAlgorithm) throws IOException {
         return provider.getHash(remoteEntry.asFile(), hashAlgorithm);
+    }
+
+    @Override
+    public InputStream getInputStream() throws IOException {
+        return provider.getInputStream(remoteEntry.asFile());
     }
 }

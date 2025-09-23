@@ -35,7 +35,6 @@ public abstract class PcloudEntry implements Entry {
 
     @Override
     public void delete() throws IOException {
-        //TODO
-        throw new UnsupportedOperationException("Not implemented");
+        provider.delete(remoteEntry);
     }
 }

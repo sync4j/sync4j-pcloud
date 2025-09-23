@@ -2,6 +2,7 @@ package com.fathzer.sync4j.pcloud;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
@@ -101,6 +102,17 @@ public class PCloudProvider implements FileProvider {
         }
         final URI fileURI = this.apiURI.resolve("checksumfile?fileid=" + remoteFile.fileId());
         return getJson(fileURI.toURL()).get("sha1").getAsString();
+    }
+
+    void delete(RemoteEntry remoteEntry) throws IOException {
+        final boolean deleted = execute(() -> apiClient.delete(remoteEntry).execute());
+        if (!deleted) {
+            throw new IOException("Failed to delete file: " + remoteEntry);
+        }
+    }
+
+    InputStream getInputStream(RemoteFile remoteFile) throws IOException {
+        return execute(() -> apiClient.download(remoteFile).execute().inputStream());
     }
 
     JsonObject getJson(URL fileURI) throws IOException {
