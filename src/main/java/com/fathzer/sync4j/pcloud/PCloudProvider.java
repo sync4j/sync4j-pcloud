@@ -4,13 +4,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.LongConsumer;
 
 import com.fathzer.sync4j.Entry;
+import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.HashAlgorithm;
+import com.fathzer.sync4j.util.ProgressInputStream;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.pcloud.sdk.ApiClient;
@@ -21,9 +23,14 @@ import com.pcloud.sdk.RemoteEntry;
 import com.pcloud.sdk.RemoteFile;
 import com.pcloud.sdk.RemoteFolder;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Request.Builder;
+import okhttp3.RequestBody;
 import okhttp3.Response;
+import okio.BufferedSink;
 
 //Note IOException encapsulate APIError that are described in the pCloud API documentation (https://docs.pcloud.com/errors/index.html)
 public class PCloudProvider implements FileProvider {
@@ -61,9 +68,11 @@ public class PCloudProvider implements FileProvider {
     public Entry get(String path, boolean fastList) throws IOException {
         try {
             return execute(() -> {
-                RemoteEntry remoteFile = this.apiClient.loadFile(path).execute();
+                RemoteEntry remoteFile = this.getRemoteEntry(path);
                 if (remoteFile.isFolder()) {
-                    remoteFile = this.apiClient.loadFolder(path).execute();
+                    if (!path.isEmpty()) {
+                        remoteFile = this.apiClient.loadFolder(path).execute();
+                    }
                     // Warning, loadFolder does not load the full folder content, if you want to get the children, you have to call listFolder
                     // or children() may return only the sub folders, not the files!
                     if (fastList) {
@@ -77,6 +86,13 @@ public class PCloudProvider implements FileProvider {
         } catch (FileNotFoundException e) {
             return new PcloudMissingFile(path);
         }
+    }
+
+    private RemoteEntry getRemoteEntry(String path) throws IOException, ApiError {
+        if (path.isEmpty()) {
+            return this.apiClient.loadFolder(0).execute();
+        }
+        return this.apiClient.loadFile(path).execute();
     }
 
     @FunctionalInterface
@@ -101,7 +117,7 @@ public class PCloudProvider implements FileProvider {
             throw new IllegalArgumentException("Unsupported hash algorithm: " + hashAlgorithm);
         }
         final URI fileURI = this.apiURI.resolve("checksumfile?fileid=" + remoteFile.fileId());
-        return getJson(fileURI.toURL()).get("sha1").getAsString();
+        return getJson(builder(fileURI).build()).get("sha1").getAsString();
     }
 
     void delete(RemoteEntry remoteEntry) throws IOException {
@@ -115,13 +131,11 @@ public class PCloudProvider implements FileProvider {
         return execute(() -> apiClient.download(remoteFile).execute().inputStream());
     }
 
-    JsonObject getJson(URL fileURI) throws IOException {
-        final Request request = new Request.Builder()
-                .url(fileURI)
-                .header("Accept", "application/json")
-                .header("Authorization", "Bearer " + this.token)
-                .build();
+    JsonObject getJson(Request request) throws IOException {
         try (Response response = this.getClient().newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected response " + response + ": " + response.body().string());
+            }
             final JsonObject jsonResponse = JsonParser.parseString(response.body().string()).getAsJsonObject();
             // Check for API errors
             if (jsonResponse.has("error")) {
@@ -130,9 +144,68 @@ public class PCloudProvider implements FileProvider {
             return jsonResponse;
         }
     }
+    
+    private Builder builder(URI uri) throws IOException {
+    	return new Request.Builder()
+                .url(uri.toURL())
+                .header("Accept", "application/json")
+                .header("Authorization", "Bearer " + this.token);
+    }
 
     RemoteFolder listFolder(long folderId, boolean recursive) throws IOException {
         return execute(() -> this.apiClient.listFolder(folderId, recursive).execute());
+    }
+
+    JsonObject upload(long folderId, String fileName, File content, LongConsumer progressListener) throws IOException {
+        MultipartBody.Builder builder = new MultipartBody.Builder()
+        		.setType(MultipartBody.FORM);
+
+        if (folderId != 0) {
+            builder.addFormDataPart("folderid", String.valueOf(folderId));
+        }
+        
+        builder.addFormDataPart("filename", fileName);
+        builder.addFormDataPart("nopartial", "true");
+        builder.addFormDataPart("mtime", String.valueOf(content.getLastModified()/1000));
+        builder.addFormDataPart("ctime", String.valueOf(content.getCreationTime()/1000));
+        
+        final long size = content.getSize();
+
+        try (InputStream data = new ProgressInputStream(content.getInputStream(), progressListener)) {
+	        // Create RequestBody that properly handles InputStream with known length
+	        RequestBody fileBody = new RequestBody() {
+	            @Override
+	            public MediaType contentType() {
+	                return MediaType.get("application/octet-stream");
+	            }
+	
+	            @Override
+	            public long contentLength() {
+	                return size;
+	            }
+	
+	            @Override
+	            public void writeTo(BufferedSink sink) throws IOException {
+	                try (data) {
+	                    byte[] buffer = new byte[8192];
+	                    int bytesRead;
+	                    while ((bytesRead = data.read(buffer)) != -1) {
+	                        sink.write(buffer, 0, bytesRead);
+	                    }
+	                }
+	            }
+	        };
+	
+	        builder.addFormDataPart("file", fileName, fileBody);
+	
+	        RequestBody requestBody = builder.build();
+	
+	        Request request = builder(apiURI.resolve("uploadfile"))
+	                .post(requestBody)
+	                .build();
+	
+            return getJson(request);
+        }
     }
     
     @Override

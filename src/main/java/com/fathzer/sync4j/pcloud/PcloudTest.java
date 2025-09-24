@@ -24,7 +24,22 @@ public class PcloudTest {
         final String path = "/PhotosJM/2002";
 
         try (PCloudProvider provider = new PCloudProvider(accessToken)) {
-            copyFile(provider.get("/The inside.mp4", false).asFile(), "/home/jma/tmp/");
+            try (LocalProvider localProvider = new LocalProvider()) {
+                // Copy from remote to local
+                Folder localFolder = localProvider.get("C:/Users/jeanm/test", false).asFolder();
+                File remoteFile = provider.get("/testFuse.sh", false).asFile();
+//                copyFile(remoteFile, localFolder);
+
+                // Copy from local to remote
+                Folder remoteFolder = provider.get("/test2", false).asFolder();
+                File localFile = localProvider.get("C:/Users/jeanm/test/linked.txt", false).asFile();
+                copyFile(localFile, remoteFolder);
+
+                // Read again remote to local
+                remoteFile = provider.get("/test2/linked.txt", false).asFile();
+                localFolder = localProvider.get("C:/Users/jeanm/test/reload", false).asFolder();
+                copyFile(remoteFile, localFolder);
+            }
 
         //     Entry entry = provider.get("/testFuse.sh", false);
         //     System.out.println(entry.getName()+" "+(entry.exists() ? "exists" : "not exists"));
@@ -50,15 +65,13 @@ public class PcloudTest {
         }
     }
 
-    private static void copyFile(File remoteFile, String localPath) throws IOException {
-        final long size = remoteFile.getSize();
+    private static void copyFile(File sourceFile, Folder targetFolder) throws IOException {
+        final long size = sourceFile.getSize();
         final AtomicLong progress = new AtomicLong();
-        try (LocalProvider provider = new LocalProvider()) {
-            provider.get(localPath, false).asFolder().copy(remoteFile.getName(), remoteFile, x -> {
+        targetFolder.copy(sourceFile.getName(), sourceFile, x -> {
                 System.out.println("Copied " + (x - progress.getAndSet(x)) + "B");
             });
-        }
-        System.out.println("Copied " + remoteFile.getName() + " to " + localPath + " (" + progress.get() +"/"+size + "B)");
+        System.out.println("Copied " + sourceFile.getName() + " to " + targetFolder.getName() + " (" + progress.get() +"/"+size + "B)");
     }
 
     private static void read(File file) throws IOException {

@@ -53,6 +53,6 @@ public class PcloudFolder extends PcloudEntry implements Folder {
 
     @Override
     public void copy(String fileName, File content, LongConsumer progressListener) throws IOException {
-        throw new UnsupportedOperationException("Not yet implemented"); //TODO
+    	provider.upload(remoteEntry.asFolder().folderId(), fileName, content, progressListener);
     }
 }
