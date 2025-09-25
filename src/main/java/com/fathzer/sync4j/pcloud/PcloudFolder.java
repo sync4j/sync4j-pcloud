@@ -10,7 +10,7 @@ import com.fathzer.sync4j.Folder;
 import com.pcloud.sdk.RemoteEntry;
 
 public class PcloudFolder extends PcloudEntry implements Folder {
-    private final boolean recursivlyLoaded;
+    private boolean recursivlyLoaded;
 
     PcloudFolder(RemoteEntry remoteEntry, PCloudProvider provider, boolean recursivlyLoaded) {
         super(remoteEntry, provider);
@@ -37,6 +37,7 @@ public class PcloudFolder extends PcloudEntry implements Folder {
         }
         if (!this.recursivlyLoaded) {
             remoteEntry = provider.listFolder(remoteEntry.asFolder().folderId(), true);
+            this.recursivlyLoaded = true;
         }
         return this;
     }
