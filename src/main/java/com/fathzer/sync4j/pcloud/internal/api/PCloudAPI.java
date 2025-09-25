@@ -8,11 +8,13 @@ import java.util.Objects;
 import java.util.function.LongConsumer;
 
 import com.fathzer.sync4j.HashAlgorithm;
+import com.fathzer.sync4j.pcloud.Zone;
 import com.fathzer.sync4j.util.ProgressInputStream;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.pcloud.sdk.ApiClient;
 import com.pcloud.sdk.ApiError;
+import com.pcloud.sdk.Authenticator;
 import com.pcloud.sdk.PCloudSdk;
 import com.pcloud.sdk.RemoteEntry;
 import com.pcloud.sdk.RemoteFile;
@@ -35,10 +37,20 @@ public class PCloudAPI implements PCloud {
     private final String token;
     private OkHttpClient httpClient;
 
-    public PCloudAPI(String accessToken) {
-        this(PCloudSdk.newClientBuilder()
-                .authenticator(Authenticators.newOAuthAuthenticator(accessToken))
-                .create(), accessToken);
+    public PCloudAPI(Zone zone, String accessToken) throws IOException {
+        this(getApiClient(zone, accessToken), accessToken);
+    }
+
+    private static ApiClient getApiClient(Zone zone, String accessToken) throws IOException {
+        final Authenticator authenticator = Authenticators.newOAuthAuthenticator(accessToken);
+        final ApiClient client = PCloudSdk.newClientBuilder().authenticator(authenticator).apiHost(zone.getRootURI().getHost()).create();
+        try {
+            System.out.println(execute(() -> client.getUserInfo().execute()));
+            return client;
+        } catch (AuthenticationException e) {
+            client.shutdown();
+            throw e;
+        }
     }
 
     PCloudAPI(ApiClient pCloudSdk, String accessToken) {
@@ -59,7 +71,7 @@ public class PCloudAPI implements PCloud {
         T call() throws IOException, ApiError;
     }
     
-    private <T> T execute(PcloudCall<T> call) throws IOException {
+    private static <T> T execute(PcloudCall<T> call) throws IOException {
         try {
             return call.call();
         } catch (ApiError e) {
@@ -67,6 +79,8 @@ public class PCloudAPI implements PCloud {
             int errorCode = e.errorCode();
             if (errorCode == 2055 || errorCode == 2002) {
                 throw new FileNotFoundException(e.errorMessage());
+            } else if (errorCode == 2094) {
+                throw new AuthenticationException(e.errorMessage());
             }
             throw new IOException(e);
         }
@@ -74,7 +88,7 @@ public class PCloudAPI implements PCloud {
 
     @Override
     public RemoteEntry get(String path) throws IOException {
-        return this.execute(() -> this.getRemoteEntry(path));
+        return execute(() -> this.getRemoteEntry(path));
     }
 
     private RemoteEntry getRemoteEntry(String path) throws IOException, ApiError {
@@ -124,7 +138,7 @@ public class PCloudAPI implements PCloud {
     @Override
     public RemoteFolder listFolder(long folderId, boolean recursive) throws IOException {
         System.out.println("listing folder " + folderId);
-        return this.execute(() -> this.sdk.listFolder(folderId, recursive).execute());
+        return execute(() -> this.sdk.listFolder(folderId, recursive).execute());
     }
 
     @Override

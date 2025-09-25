@@ -15,6 +15,7 @@ import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.Folder;
 import com.fathzer.sync4j.file.LocalProvider;
 import com.fathzer.sync4j.pcloud.PCloudProvider;
+import com.fathzer.sync4j.pcloud.Zone;
 
 public class PcloudTest {
     private static final String INDENT = "    ";
@@ -24,7 +25,7 @@ public class PcloudTest {
         final String accessToken = args[0];
         final String path = "/PhotosJM/2002";
 
-        try (PCloudProvider provider = new PCloudProvider(accessToken)) {
+        try (PCloudProvider provider = new PCloudProvider(Zone.US, accessToken)) {
             try (LocalProvider localProvider = new LocalProvider()) {
                 // Copy from remote to local
 //                Folder localFolder = localProvider.get("/home/jma/tmp").asFolder();

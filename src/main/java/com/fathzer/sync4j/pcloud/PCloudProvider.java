@@ -20,8 +20,8 @@ import com.pcloud.sdk.RemoteFolder;
 public class PCloudProvider implements FileProvider {
     private final PCloud pcloud;
 
-    public PCloudProvider(String accessToken) {
-        this.pcloud = new PCloudAPI(accessToken);
+    public PCloudProvider(Zone zone, String accessToken) throws IOException {
+        this.pcloud = new PCloudAPI(zone, accessToken);
     }
 
     @Override

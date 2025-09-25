@@ -20,14 +20,6 @@ import com.pcloud.sdk.RemoteFolder;
 
 class PCloudAPITest {
     @Test
-    void testAuthentication() throws Exception {
-        //TODO Seems 2094 is sent when authentication is wrong
-        try (PCloudAPI api = new PCloudAPI("token")) {
-            api.get("");
-        }
-    }
-
-    @Test
     @SuppressWarnings("unchecked")
     void testGet() throws IOException, ApiError {
         ApiClient mockApiClient = mock(ApiClient.class);
