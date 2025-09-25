@@ -65,7 +65,7 @@ public class PCloudProvider implements FileProvider {
     }
 
     @Override
-    public Entry get(String path, boolean fastList) throws IOException {
+    public Entry get(String path) throws IOException {
         try {
             return execute(() -> {
                 RemoteEntry remoteFile = this.getRemoteEntry(path);
@@ -73,18 +73,12 @@ public class PCloudProvider implements FileProvider {
                     if (!path.isEmpty()) {
                         remoteFile = this.apiClient.loadFolder(path).execute();
                     }
-                    // Warning, loadFolder does not load the full folder content, if you want to get the children, you have to call listFolder
-                    // or children() may return only the sub folders, not the files!
-                    if (fastList) {
-                        // Load the full tree folder content
-                        remoteFile = listFolder(remoteFile.asFolder().folderId(), true);
-                    }
-                    return new PcloudFolder(remoteFile, this, fastList);
+                    return new PcloudFolder(remoteFile, this, false);
                 }
                 return new PcloudFile(remoteFile, this);
             });
         } catch (FileNotFoundException e) {
-            return new PcloudMissingFile(path);
+            return new PcloudMissingFile(path, this);
         }
     }
 
@@ -93,6 +87,11 @@ public class PCloudProvider implements FileProvider {
             return this.apiClient.loadFolder(0).execute();
         }
         return this.apiClient.loadFile(path).execute();
+    }
+
+    PcloudFolder getRemoteFolder(long folderId) throws IOException {
+        RemoteFolder remoteFolder = this.execute(() -> this.apiClient.loadFolder(folderId).execute());
+        return new PcloudFolder(remoteFolder, this, false);
     }
 
     @FunctionalInterface

@@ -26,18 +26,18 @@ public class PcloudTest {
         try (PCloudProvider provider = new PCloudProvider(accessToken)) {
             try (LocalProvider localProvider = new LocalProvider()) {
                 // Copy from remote to local
-                Folder localFolder = localProvider.get("C:/Users/jeanm/test", false).asFolder();
-                File remoteFile = provider.get("/testFuse.sh", false).asFile();
+                Folder localFolder = localProvider.get("C:/Users/jeanm/test").asFolder();
+                File remoteFile = provider.get("/testFuse.sh").asFile();
 //                copyFile(remoteFile, localFolder);
 
                 // Copy from local to remote
-                Folder remoteFolder = provider.get("/test2", false).asFolder();
-                File localFile = localProvider.get("C:/Users/jeanm/test/linked.txt", false).asFile();
+                Folder remoteFolder = provider.get("/test2").asFolder();
+                File localFile = localProvider.get("C:/Users/jeanm/test/linked.txt").asFile();
                 copyFile(localFile, remoteFolder);
 
                 // Read again remote to local
-                remoteFile = provider.get("/test2/linked.txt", false).asFile();
-                localFolder = localProvider.get("C:/Users/jeanm/test/reload", false).asFolder();
+                remoteFile = provider.get("/test2/linked.txt").asFile();
+                localFolder = localProvider.get("C:/Users/jeanm/test/reload").asFolder();
                 copyFile(remoteFile, localFolder);
             }
 
@@ -49,7 +49,7 @@ public class PcloudTest {
         //         System.out.println("Not a file");
         //     }
 
-        //     printTree(provider, path);
+            printTree(provider, path);
 
         //     Path localPath = Paths.get("/home/jma/tmp/photosTest/2002/Pict200205010005.jpg");
         //     System.out.println("SHA1 Hash of file: " + SHA1.computeHash(localPath));
@@ -89,18 +89,19 @@ public class PcloudTest {
     }
 
     private static void printTree(FileProvider provider, String rootPath) throws IOException {
-        Folder rootFolder = provider.get(rootPath, false).asFolder();
         System.out.println("======================================");
-        System.out.println("Folder Structure for: " + provider.getClass().getSimpleName()+":"+rootFolder.getName());
+        System.out.println("Folder Structure for: " + provider.getClass().getSimpleName()+":"+rootPath);
         System.out.println("--------------------------------------");
         long startTime = System.currentTimeMillis();
+        Folder rootFolder = provider.get(rootPath).asFolder();
         long size = printFolderTree(rootFolder, "");
         System.out.println("Size: " + size+ " in " + (System.currentTimeMillis() - startTime) + "ms");
 
         System.out.println("--------------------------------------");
         System.out.println("Folder Structure (fast-list): ");
         startTime = System.currentTimeMillis();
-        rootFolder = provider.get(rootPath, true).asFolder();
+        rootFolder = provider.get(rootPath).asFolder();
+        rootFolder.preload();
         size = printFolderTree(rootFolder, "");
         System.out.println("Size: " + size+ " in " + (System.currentTimeMillis() - startTime) + "ms");
         System.out.println("======================================");

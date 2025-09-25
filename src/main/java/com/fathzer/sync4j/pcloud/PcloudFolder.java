@@ -31,6 +31,17 @@ public class PcloudFolder extends PcloudEntry implements Folder {
     }
 
     @Override
+    public Folder preload() throws IOException {
+        if (!remoteEntry.isFolder()) {
+            throw new IllegalArgumentException("Not a directory");
+        }
+        if (!this.recursivlyLoaded) {
+            remoteEntry = provider.listFolder(remoteEntry.asFolder().folderId(), true);
+        }
+        return this;
+    }
+
+    @Override
     public List<Entry> list() throws IOException {
         if (!remoteEntry.isFolder()) {
             throw new IllegalArgumentException("Not a directory");
