@@ -7,7 +7,7 @@ import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.HashAlgorithm;
 import com.pcloud.sdk.RemoteEntry;
 
-public class PcloudFile extends PcloudEntry implements File {
+class PcloudFile extends PcloudEntry implements File {
 
     PcloudFile(RemoteEntry remoteEntry, PCloudProvider provider) {
         super(remoteEntry, provider);

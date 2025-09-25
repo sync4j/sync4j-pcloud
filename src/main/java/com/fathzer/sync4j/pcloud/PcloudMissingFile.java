@@ -7,7 +7,7 @@ import java.util.Optional;
 
 import com.fathzer.sync4j.Entry;
 
-public class PcloudMissingFile implements Entry {
+class PcloudMissingFile implements Entry {
     private final Path path;
     private final PCloudProvider provider;
     

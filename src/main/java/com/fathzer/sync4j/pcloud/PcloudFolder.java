@@ -9,7 +9,7 @@ import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.Folder;
 import com.pcloud.sdk.RemoteEntry;
 
-public class PcloudFolder extends PcloudEntry implements Folder {
+class PcloudFolder extends PcloudEntry implements Folder {
     private boolean recursivlyLoaded;
 
     PcloudFolder(RemoteEntry remoteEntry, PCloudProvider provider, boolean recursivlyLoaded) {

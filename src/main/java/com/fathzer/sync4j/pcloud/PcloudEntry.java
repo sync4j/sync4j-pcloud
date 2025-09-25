@@ -6,7 +6,7 @@ import java.util.Optional;
 import com.fathzer.sync4j.Entry;
 import com.pcloud.sdk.RemoteEntry;
 
-public abstract class PcloudEntry implements Entry {
+abstract class PcloudEntry implements Entry {
     protected RemoteEntry remoteEntry;
     protected final PCloudProvider provider;
 

@@ -1,4 +1,4 @@
-package com.fathzer.sync4j.pcloud;
+package com.fathzer.sync4j.pcloud.test;
 
 import static com.fathzer.sync4j.HashAlgorithm.SHA1;
 
@@ -14,6 +14,7 @@ import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.Folder;
 import com.fathzer.sync4j.file.LocalProvider;
+import com.fathzer.sync4j.pcloud.PCloudProvider;
 
 public class PcloudTest {
     private static final String INDENT = "    ";
@@ -26,19 +27,19 @@ public class PcloudTest {
         try (PCloudProvider provider = new PCloudProvider(accessToken)) {
             try (LocalProvider localProvider = new LocalProvider()) {
                 // Copy from remote to local
-                Folder localFolder = localProvider.get("C:/Users/jeanm/test").asFolder();
-                File remoteFile = provider.get("/testFuse.sh").asFile();
+//                Folder localFolder = localProvider.get("/home/jma/tmp").asFolder();
+//                File remoteFile = provider.get("/testFuse.sh").asFile();
 //                copyFile(remoteFile, localFolder);
 
                 // Copy from local to remote
-                Folder remoteFolder = provider.get("/test2").asFolder();
-                File localFile = localProvider.get("C:/Users/jeanm/test/linked.txt").asFile();
-                copyFile(localFile, remoteFolder);
+//                Folder remoteFolder = provider.get("/test2").asFolder();
+//                File localFile = localProvider.get("C:/Users/jeanm/test/linked.txt").asFile();
+//                copyFile(localFile, remoteFolder);
 
                 // Read again remote to local
-                remoteFile = provider.get("/test2/linked.txt").asFile();
-                localFolder = localProvider.get("C:/Users/jeanm/test/reload").asFolder();
-                copyFile(remoteFile, localFolder);
+//                remoteFile = provider.get("/test2/linked.txt").asFile();
+//                localFolder = localProvider.get("C:/Users/jeanm/test/reload").asFolder();
+//                copyFile(remoteFile, localFolder);
             }
 
         //     Entry entry = provider.get("/testFuse.sh", false);
@@ -49,7 +50,7 @@ public class PcloudTest {
         //         System.out.println("Not a file");
         //     }
 
-            printTree(provider, path);
+//            printTree(provider, path);
 
         //     Path localPath = Paths.get("/home/jma/tmp/photosTest/2002/Pict200205010005.jpg");
         //     System.out.println("SHA1 Hash of file: " + SHA1.computeHash(localPath));
@@ -61,7 +62,7 @@ public class PcloudTest {
         //     System.out.println(remoteFile2.getName()+" "+(remoteFile2.exists()?"exists":"not exists"));
         // }
         // try (LocalProvider provider = new LocalProvider()) {
-        //     printTree(provider, "/home/jma/tmp/photosTest/2002");
+             printTree(provider, "/home/jma/tmp/photosTest/2002");
         }
     }
 
@@ -113,10 +114,11 @@ public class PcloudTest {
 //            System.out.print(indent + "|");
             size ++;
             if (entry.isFile()) {
-                String hash = WITH_HASH ? " (" + entry.asFile().getHash(SHA1) + ")" : "";
-//                System.out.println("--- " + entry.getName() + " (" + entry.getSize() + "B - " + entry.getLastModified() + " - Hash: " + hash + ")");
+                File file = entry.asFile();
+                String hash = WITH_HASH ? " (" + file.getHash(SHA1) + ")" : "";
+//                System.out.println("--- " + file.getName() + " (" + file.getSize() + "B - " + file.getLastModified() + " - Hash: " + hash + ")");
             } else {
-//                System.out.println("+-- " + entry.getName() + "/");
+                System.out.println("+-- " + entry.getName() + "/");
                 size += printFolderTree(entry.asFolder(), indent + INDENT);
             }
         }
