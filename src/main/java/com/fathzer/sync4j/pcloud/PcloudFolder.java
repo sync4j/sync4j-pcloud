@@ -8,6 +8,7 @@ import com.fathzer.sync4j.Entry;
 import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.Folder;
 import com.pcloud.sdk.RemoteEntry;
+import com.pcloud.sdk.RemoteFolder;
 
 class PcloudFolder extends PcloudEntry implements Folder {
     private boolean recursivlyLoaded;
@@ -64,7 +65,13 @@ class PcloudFolder extends PcloudEntry implements Folder {
     }
 
     @Override
-    public void copy(String fileName, File content, LongConsumer progressListener) throws IOException {
-    	provider.upload(remoteEntry.asFolder().folderId(), fileName, content, progressListener);
+    public File copy(String fileName, File content, LongConsumer progressListener) throws IOException {
+    	return new PcloudFile(provider.upload(remoteEntry.asFolder().folderId(), fileName, content, progressListener), provider);
+    }
+
+    @Override
+    public Folder mkdir(String folderName) throws IOException {
+        final RemoteFolder remoteFolder = provider.mkdir(remoteEntry.asFolder().folderId(), folderName);
+        return new PcloudFolder(remoteFolder, provider, false);
     }
 }

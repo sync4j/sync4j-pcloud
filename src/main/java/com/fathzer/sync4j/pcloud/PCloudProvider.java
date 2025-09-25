@@ -12,7 +12,6 @@ import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.HashAlgorithm;
 import com.fathzer.sync4j.pcloud.internal.api.PCloud;
 import com.fathzer.sync4j.pcloud.internal.api.PCloudAPI;
-import com.google.gson.JsonObject;
 import com.pcloud.sdk.RemoteEntry;
 import com.pcloud.sdk.RemoteFile;
 import com.pcloud.sdk.RemoteFolder;
@@ -64,8 +63,12 @@ public class PCloudProvider implements FileProvider {
         return this.pcloud.listFolder(folderId, recursive);
     }
 
-    JsonObject upload(long folderId, String fileName, File content, LongConsumer progressListener) throws IOException {
+    RemoteFile upload(long folderId, String fileName, File content, LongConsumer progressListener) throws IOException {
         return this.pcloud.upload(folderId, fileName, content.getInputStream(), content.getSize(), content.getLastModified(), content.getCreationTime(), progressListener);
+    }
+
+    RemoteFolder mkdir(long folderId, String folderName) throws IOException {
+        return this.pcloud.mkdir(folderId, folderName);
     }
     
     @Override

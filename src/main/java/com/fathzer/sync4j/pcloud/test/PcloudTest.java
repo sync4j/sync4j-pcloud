@@ -25,23 +25,24 @@ public class PcloudTest {
         final String accessToken = args[0];
         final String path = "/PhotosJM/2002";
 
-        try (PCloudProvider provider = new PCloudProvider(Zone.US, accessToken)) {
-            try (LocalProvider localProvider = new LocalProvider()) {
+        try (FileProvider provider = new PCloudProvider(Zone.US, accessToken)) {
+            try (FileProvider localProvider = new LocalProvider()) {
                 // Copy from remote to local
-//                Folder localFolder = localProvider.get("/home/jma/tmp").asFolder();
-//                File remoteFile = provider.get("/testFuse.sh").asFile();
-//                copyFile(remoteFile, localFolder);
+            //    Folder localFolder = localProvider.get("/home/jma/tmp").asFolder();
+            //    File remoteFile = provider.get("/testFuse.sh").asFile();
+            //    copyFile(remoteFile, localFolder);
 
                 // Copy from local to remote
-//                Folder remoteFolder = provider.get("/test2").asFolder();
-//                File localFile = localProvider.get("C:/Users/jeanm/test/linked.txt").asFile();
-//                copyFile(localFile, remoteFolder);
+                Folder remoteFolder = provider.get("/test").asFolder();
+                File localFile = localProvider.get("/home/jma/tmp/photosTest/1998/IMGP7236.jpg").asFile();
+                File remoteFile = copyFile(localFile, remoteFolder);
+
+                System.out.println(remoteFile);
 
                 // Read again remote to local
 //                remoteFile = provider.get("/test2/linked.txt").asFile();
 //                localFolder = localProvider.get("C:/Users/jeanm/test/reload").asFolder();
 //                copyFile(remoteFile, localFolder);
-            }
 
         //     Entry entry = provider.get("/testFuse.sh", false);
         //     System.out.println(entry.getName()+" "+(entry.exists() ? "exists" : "not exists"));
@@ -51,7 +52,7 @@ public class PcloudTest {
         //         System.out.println("Not a file");
         //     }
 
-//            printTree(provider, path);
+        //        printTree(provider, path);
 
         //     Path localPath = Paths.get("/home/jma/tmp/photosTest/2002/Pict200205010005.jpg");
         //     System.out.println("SHA1 Hash of file: " + SHA1.computeHash(localPath));
@@ -61,19 +62,22 @@ public class PcloudTest {
 
         //     Entry remoteFile2 = provider.get("/testFuse.sh", false);
         //     System.out.println(remoteFile2.getName()+" "+(remoteFile2.exists()?"exists":"not exists"));
-        // }
-        // try (LocalProvider provider = new LocalProvider()) {
-             printTree(provider, "/home/jma/tmp/photosTest/2002");
+        //        printTree(localProvider, "/home/jma/tmp/photosTest/2002");
+
+                // Folder newFolder = provider.get("/PhotosJM").asFolder().mkdir("new Folder");
+                // System.out.println("New folder created: " + newFolder.getName());
+            }
         }
     }
 
-    private static void copyFile(File sourceFile, Folder targetFolder) throws IOException {
+    private static File copyFile(File sourceFile, Folder targetFolder) throws IOException {
         final long size = sourceFile.getSize();
         final AtomicLong progress = new AtomicLong();
-        targetFolder.copy(sourceFile.getName(), sourceFile, x -> {
+        File result = targetFolder.copy(sourceFile.getName(), sourceFile, x -> {
                 System.out.println("Copied " + (x - progress.getAndSet(x)) + "B");
             });
         System.out.println("Copied " + sourceFile.getName() + " to " + targetFolder.getName() + " (" + progress.get() +"/"+size + "B)");
+        return result;
     }
 
     private static void read(File file) throws IOException {
@@ -99,14 +103,16 @@ public class PcloudTest {
         long size = printFolderTree(rootFolder, "");
         System.out.println("Size: " + size+ " in " + (System.currentTimeMillis() - startTime) + "ms");
 
-        System.out.println("--------------------------------------");
-        System.out.println("Folder Structure (fast-list): ");
-        startTime = System.currentTimeMillis();
-        rootFolder = provider.get(rootPath).asFolder();
-        rootFolder.preload();
-        size = printFolderTree(rootFolder, "");
-        System.out.println("Size: " + size+ " in " + (System.currentTimeMillis() - startTime) + "ms");
-        System.out.println("======================================");
+        if (provider.isFastListSupported()) {
+            System.out.println("--------------------------------------");
+            System.out.println("Folder Structure (fast-list): ");
+            startTime = System.currentTimeMillis();
+            rootFolder = provider.get(rootPath).asFolder();
+            rootFolder.preload();
+            size = printFolderTree(rootFolder, "");
+            System.out.println("Size: " + size+ " in " + (System.currentTimeMillis() - startTime) + "ms");
+            System.out.println("======================================");
+        }
     }
     
     private static long printFolderTree(Folder folder, String indent) throws IOException {

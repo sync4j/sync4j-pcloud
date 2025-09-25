@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.function.LongConsumer;
 
 import com.fathzer.sync4j.HashAlgorithm;
-import com.google.gson.JsonObject;
 import com.pcloud.sdk.RemoteEntry;
 import com.pcloud.sdk.RemoteFile;
 import com.pcloud.sdk.RemoteFolder;
@@ -22,8 +21,9 @@ public interface PCloud extends AutoCloseable {
 
     void delete(RemoteEntry remoteEntry) throws IOException;
 
-    //TODO JsonObject is clearly not a cool type to return!
-    JsonObject upload(long folderId, String fileName, InputStream content, long size, long mtime, long ctime, LongConsumer progressListener) throws IOException;
+    RemoteFile upload(long folderId, String fileName, InputStream content, long size, long mtime, long ctime, LongConsumer progressListener) throws IOException;
+
+    RemoteFolder mkdir(long folderId, String folderName) throws IOException;
     
     @Override
     void close();

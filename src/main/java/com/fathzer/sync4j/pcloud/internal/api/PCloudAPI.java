@@ -19,6 +19,7 @@ import com.pcloud.sdk.PCloudSdk;
 import com.pcloud.sdk.RemoteEntry;
 import com.pcloud.sdk.RemoteFile;
 import com.pcloud.sdk.RemoteFolder;
+import com.pcloud.sdk.internal.JsonUtils;
 import com.pcloud.sdk.Authenticators;
 
 import okhttp3.MediaType;
@@ -45,7 +46,7 @@ public class PCloudAPI implements PCloud {
         final Authenticator authenticator = Authenticators.newOAuthAuthenticator(accessToken);
         final ApiClient client = PCloudSdk.newClientBuilder().authenticator(authenticator).apiHost(zone.getRootURI().getHost()).create();
         try {
-            System.out.println(execute(() -> client.getUserInfo().execute()));
+            execute(() -> client.getUserInfo().execute());
             return client;
         } catch (AuthenticationException e) {
             client.shutdown();
@@ -75,7 +76,7 @@ public class PCloudAPI implements PCloud {
         try {
             return call.call();
         } catch (ApiError e) {
-            System.out.println("API Error: " + e);
+            System.out.println("API Error: " + e); //TODO remove
             int errorCode = e.errorCode();
             if (errorCode == 2055 || errorCode == 2002) {
                 throw new FileNotFoundException(e.errorMessage());
@@ -137,12 +138,11 @@ public class PCloudAPI implements PCloud {
 
     @Override
     public RemoteFolder listFolder(long folderId, boolean recursive) throws IOException {
-        System.out.println("listing folder " + folderId);
         return execute(() -> this.sdk.listFolder(folderId, recursive).execute());
     }
 
     @Override
-    public JsonObject upload(long folderId, String fileName, InputStream content, long size, long mtime, long ctime, LongConsumer progressListener) throws IOException {
+    public RemoteFile upload(long folderId, String fileName, InputStream content, long size, long mtime, long ctime, LongConsumer progressListener) throws IOException {
         final MultipartBody.Builder builder = new MultipartBody.Builder()
             .setType(MultipartBody.FORM);
 
@@ -187,9 +187,17 @@ public class PCloudAPI implements PCloud {
 	        Request request = builder(apiURI.resolve("uploadfile"))
 	                .post(requestBody)
 	                .build();
-	
-            return getJson(request);
+            try {
+                return JsonUtils.extractFileFromResponse(getJson(request), this.sdk);
+            } catch (IOException e) {
+                throw new IOException(e);
+            }
         }
+    }
+
+    @Override
+    public RemoteFolder mkdir(long folderId, String folderName) throws IOException {
+        return execute(() -> this.sdk.createFolder(folderId, folderName).execute());
     }
 
     @Override
