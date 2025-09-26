@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.fathzer.sync4j.Entry;
+import com.fathzer.sync4j.FileProvider;
 
 import jakarta.annotation.Nonnull;
 
@@ -15,6 +16,11 @@ class PCloudMissingFile implements Entry {
     PCloudMissingFile(@Nonnull String fullPath, @Nonnull PCloudProvider provider) {
         this.path = Paths.get(fullPath);
         this.provider = provider;
+    }
+
+    @Override
+    public FileProvider getFileProvider() {
+        return provider;
     }
     
     @Override

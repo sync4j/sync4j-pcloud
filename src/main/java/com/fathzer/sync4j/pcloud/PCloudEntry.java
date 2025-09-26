@@ -3,6 +3,7 @@ package com.fathzer.sync4j.pcloud;
 import java.io.IOException;
 
 import com.fathzer.sync4j.Entry;
+import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.pcloud.internal.PathUtils;
 import com.pcloud.sdk.RemoteEntry;
 
@@ -17,6 +18,11 @@ abstract class PCloudEntry implements Entry {
         this.parentPath = parentPath;
         this.remoteEntry = remoteEntry;
         this.provider = provider;
+    }
+
+    @Override
+    public FileProvider getFileProvider() {
+        return provider;
     }
 
     @Override

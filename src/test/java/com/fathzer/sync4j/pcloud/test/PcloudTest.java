@@ -29,7 +29,7 @@ public class PcloudTest {
         final String path = "/PhotosJM/2002";
 
         try (FileProvider provider = new PCloudProvider(Zone.US, accessToken)) {
-            try (FileProvider localProvider = new LocalProvider()) {
+            try (FileProvider localProvider = LocalProvider.INSTANCE) {
                 // Copy from remote to local
             //    Folder localFolder = localProvider.get("/home/jma/tmp").asFolder();
             //    File remoteFile = provider.get("/testFuse.sh").asFile();
