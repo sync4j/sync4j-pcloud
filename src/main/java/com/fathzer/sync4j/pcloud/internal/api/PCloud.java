@@ -13,10 +13,9 @@ import com.pcloud.sdk.RemoteFolder;
  * Interface to the pCloud API.
  */
 public interface PCloud extends AutoCloseable {
-
     /**
      * Get a remote entry.
-     * @param path the path of the remote entry. All paths should start with a slash.
+     * @param path the path of the remote entry. All paths should start with a slash except the root path which is an empty string.
      * @return the remote entry
      * @throws IOException if an I/O error occurs
      */

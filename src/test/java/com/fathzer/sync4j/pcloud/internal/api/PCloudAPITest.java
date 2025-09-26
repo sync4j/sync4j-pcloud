@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import com.fathzer.sync4j.pcloud.PCloudProvider;
 import com.pcloud.sdk.ApiClient;
 import com.pcloud.sdk.ApiError;
 import com.pcloud.sdk.Call;
@@ -49,7 +50,7 @@ class PCloudAPITest {
 
         try (PCloudAPI api = new PCloudAPI(mockApiClient, "token")) {
             // Test root folder
-            RemoteEntry root = api.get("/");
+            RemoteEntry root = api.get(PCloudProvider.ROOT_PATH);
             assertSame(mockRootFolder, root);
            
             // Test error cases
@@ -59,7 +60,6 @@ class PCloudAPITest {
             assertThrows(FileNotFoundException.class, () -> api.get("/toto/toto.txt"));
             
             assertThrows(NullPointerException.class, () -> api.get(null));
-            assertThrows(IllegalArgumentException.class, () -> api.get(""));
         }
     }
 }

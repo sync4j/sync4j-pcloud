@@ -7,6 +7,7 @@ import java.util.List;
 import com.fathzer.sync4j.Entry;
 import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.HashAlgorithm;
+import com.fathzer.sync4j.pcloud.internal.PathUtils;
 import com.fathzer.sync4j.pcloud.internal.api.PCloud;
 import com.fathzer.sync4j.pcloud.internal.api.PCloudAPI;
 import com.pcloud.sdk.RemoteEntry;
@@ -18,12 +19,14 @@ import jakarta.annotation.Nonnull;
  * <br>
  * Please note that:
  * <ul>
- * <li>All paths should start with a slash, root folder is "/".</li>
  * <li>The only supported hash algorithm is SHA1.</li>
  * </ul>
  */
 public class PCloudProvider implements FileProvider {
     private final PCloud pcloud;
+
+    /** The root path that can be passed to {@link #get(String)}. */
+    public static final String ROOT_PATH = "";
 
     /** Constructor.
      * @param zone the zone to use. See {@link Zone} for available zones.
@@ -47,8 +50,9 @@ public class PCloudProvider implements FileProvider {
     @Override
     public Entry get(@Nonnull String path) throws IOException {
         try {
+            final String parentPath = PathUtils.getParent(path);
             RemoteEntry remoteEntry = this.pcloud.get(path);
-            return remoteEntry.isFolder() ? new PCloudFolder(remoteEntry, this, false) : new PCloudFile(remoteEntry, this);
+            return remoteEntry.isFolder() ? new PCloudFolder(parentPath, remoteEntry, this, false) : new PCloudFile(parentPath, remoteEntry, this);
         } catch (FileNotFoundException e) {
             return new PCloudMissingFile(path, this);
         }

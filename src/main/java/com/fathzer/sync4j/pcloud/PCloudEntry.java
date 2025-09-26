@@ -1,18 +1,20 @@
 package com.fathzer.sync4j.pcloud;
 
 import java.io.IOException;
-import java.util.Optional;
 
 import com.fathzer.sync4j.Entry;
+import com.fathzer.sync4j.pcloud.internal.PathUtils;
 import com.pcloud.sdk.RemoteEntry;
 
 import jakarta.annotation.Nonnull;
 
 abstract class PCloudEntry implements Entry {
+    protected final String parentPath;
     protected RemoteEntry remoteEntry;
     protected final PCloudProvider provider;
 
-    protected PCloudEntry(@Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
+    protected PCloudEntry(@Nonnull String parentPath, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
+        this.parentPath = parentPath;
         this.remoteEntry = remoteEntry;
         this.provider = provider;
     }
@@ -23,24 +25,26 @@ abstract class PCloudEntry implements Entry {
     }
 
     @Override
-    public Optional<Entry> getParent() throws IOException {
+    public String getParentPath() {
+        return parentPath;
+    }
+
+    @Override
+    public Entry getParent() throws IOException {
         if (isFolder()) {
             long folderId = remoteEntry.asFolder().folderId();
             if (folderId == 0) {
-                return Optional.empty();
+                return null;
             }
         }
         final long parentFolderId = remoteEntry.parentFolderId();
-        if (parentFolderId == 0) {
-            return Optional.empty();
-        }
-        PCloudFolder parentFolder = new PCloudFolder(provider.pCloud().listFolder(parentFolderId, false), this.provider, false);
-        return Optional.of(parentFolder);
+        final String gfPath = PathUtils.getParent(this.parentPath);
+        return new PCloudFolder(gfPath, provider.pCloud().listFolder(parentFolderId, false), this.provider, false);
     }
     
     @Override
     public String getName() {
-        return remoteEntry.name();
+        return parentPath == null ? PCloudProvider.ROOT_PATH : remoteEntry.name();
     }
 
     RemoteEntry getRemoteEntry() {

@@ -11,8 +11,8 @@ import jakarta.annotation.Nonnull;
 
 class PCloudFile extends PCloudEntry implements File {
 
-    PCloudFile(@Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
-        super(remoteEntry, provider);
+    PCloudFile(@Nonnull String parentPath, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
+        super(parentPath, remoteEntry, provider);
         if (!remoteEntry.isFile()) {
             throw new IllegalArgumentException("Not a file");
         }

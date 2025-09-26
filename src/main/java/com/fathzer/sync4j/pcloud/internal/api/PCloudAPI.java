@@ -9,6 +9,7 @@ import java.util.function.LongConsumer;
 
 import com.fathzer.sync4j.HashAlgorithm;
 import com.fathzer.sync4j.pcloud.Zone;
+import com.fathzer.sync4j.pcloud.internal.PathUtils;
 import com.fathzer.sync4j.util.ProgressInputStream;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -104,10 +105,7 @@ public class PCloudAPI implements PCloud {
     }
 
     private RemoteEntry getRemoteEntry(String path) throws IOException, ApiError {
-        if (path.isEmpty()) {
-            throw new IllegalArgumentException("Path is empty, root folder is '/'");
-        }
-        if ("/".equals(path)) {
+        if (PathUtils.isRoot(path)) {
             return this.sdk.loadFolder(0).execute();
         }
         RemoteFile entry = this.sdk.loadFile(path).execute();

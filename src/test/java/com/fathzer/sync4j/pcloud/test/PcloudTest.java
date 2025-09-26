@@ -71,20 +71,12 @@ public class PcloudTest {
                 // System.out.println("New folder created: " + newFolder.getName());
 
                 Entry remoteEntry = provider.get("/PhotosJM/2002/test1/test2/toto.xml");
-                System.out.println(getFullPath(remoteEntry));
+                while (remoteEntry != null) {
+                    System.out.println("parentPath: " + remoteEntry.getParentPath()+", name: "+remoteEntry.getName());
+                    remoteEntry = remoteEntry.getParent();
+                }
             }
         }
-    }
-
-    private static String getFullPath(Entry entry) throws IOException {
-        List<String> path = new LinkedList<>();
-        do {
-            path.add(entry.getName());
-            System.out.println(entry.getName()+" "+entry.exists()+" "+entry.getClass().getSimpleName());
-            entry = entry.getParent().orElse(null);
-        } while (entry != null);
-        Collections.reverse(path);
-        return String.join("/", path);
     }
 
     private static File copyFile(File sourceFile, Folder targetFolder) throws IOException {
