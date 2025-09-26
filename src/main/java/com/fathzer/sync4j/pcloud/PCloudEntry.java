@@ -6,11 +6,13 @@ import java.util.Optional;
 import com.fathzer.sync4j.Entry;
 import com.pcloud.sdk.RemoteEntry;
 
-abstract class PcloudEntry implements Entry {
+import jakarta.annotation.Nonnull;
+
+abstract class PCloudEntry implements Entry {
     protected RemoteEntry remoteEntry;
     protected final PCloudProvider provider;
 
-    protected PcloudEntry(RemoteEntry remoteEntry, PCloudProvider provider) {
+    protected PCloudEntry(@Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
         this.remoteEntry = remoteEntry;
         this.provider = provider;
     }
@@ -32,7 +34,8 @@ abstract class PcloudEntry implements Entry {
         if (parentFolderId == 0) {
             return Optional.empty();
         }
-        return Optional.of(provider.getRemoteFolder(parentFolderId));
+        PCloudFolder parentFolder = new PCloudFolder(provider.pCloud().listFolder(parentFolderId, false), this.provider, false);
+        return Optional.of(parentFolder);
     }
     
     @Override
@@ -51,6 +54,6 @@ abstract class PcloudEntry implements Entry {
 
     @Override
     public void delete() throws IOException {
-        provider.delete(remoteEntry);
+        provider.pCloud().delete(remoteEntry);
     }
 }

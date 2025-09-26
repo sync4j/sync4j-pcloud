@@ -7,11 +7,13 @@ import java.util.Optional;
 
 import com.fathzer.sync4j.Entry;
 
-class PcloudMissingFile implements Entry {
+import jakarta.annotation.Nonnull;
+
+class PCloudMissingFile implements Entry {
     private final Path path;
     private final PCloudProvider provider;
     
-    PcloudMissingFile(String name, PCloudProvider provider) {
+    PCloudMissingFile(@Nonnull String name, @Nonnull PCloudProvider provider) {
         this.path = Paths.get(name);
         this.provider = provider;
     }

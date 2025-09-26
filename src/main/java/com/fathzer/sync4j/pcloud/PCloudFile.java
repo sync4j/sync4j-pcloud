@@ -7,9 +7,11 @@ import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.HashAlgorithm;
 import com.pcloud.sdk.RemoteEntry;
 
-class PcloudFile extends PcloudEntry implements File {
+import jakarta.annotation.Nonnull;
 
-    PcloudFile(RemoteEntry remoteEntry, PCloudProvider provider) {
+class PCloudFile extends PCloudEntry implements File {
+
+    PCloudFile(@Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
         super(remoteEntry, provider);
         if (!remoteEntry.isFile()) {
             throw new IllegalArgumentException("Not a file");
@@ -43,11 +45,11 @@ class PcloudFile extends PcloudEntry implements File {
 
     @Override
     public String getHash(HashAlgorithm hashAlgorithm) throws IOException {
-        return provider.getHash(remoteEntry.asFile(), hashAlgorithm);
+        return provider.pCloud().getHash(remoteEntry.asFile(), hashAlgorithm);
     }
 
     @Override
     public InputStream getInputStream() throws IOException {
-        return provider.getInputStream(remoteEntry.asFile());
+        return provider.pCloud().getInputStream(remoteEntry.asFile());
     }
 }

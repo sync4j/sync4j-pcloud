@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.fathzer.sync4j.Entry;
@@ -33,11 +36,11 @@ public class PcloudTest {
             //    copyFile(remoteFile, localFolder);
 
                 // Copy from local to remote
-                Folder remoteFolder = provider.get("/test").asFolder();
-                File localFile = localProvider.get("/home/jma/tmp/photosTest/1998/IMGP7236.jpg").asFile();
-                File remoteFile = copyFile(localFile, remoteFolder);
+                // Folder remoteFolder = provider.get("/test").asFolder();
+                // File localFile = localProvider.get("/home/jma/tmp/photosTest/1998/IMGP7236.jpg").asFile();
+                // File remoteFile = copyFile(localFile, remoteFolder);
 
-                System.out.println(remoteFile);
+                // System.out.println(remoteFile);
 
                 // Read again remote to local
 //                remoteFile = provider.get("/test2/linked.txt").asFile();
@@ -66,8 +69,22 @@ public class PcloudTest {
 
                 // Folder newFolder = provider.get("/PhotosJM").asFolder().mkdir("new Folder");
                 // System.out.println("New folder created: " + newFolder.getName());
+
+                Entry remoteEntry = provider.get("/PhotosJM/2002/test1/test2/toto.xml");
+                System.out.println(getFullPath(remoteEntry));
             }
         }
+    }
+
+    private static String getFullPath(Entry entry) throws IOException {
+        List<String> path = new LinkedList<>();
+        do {
+            path.add(entry.getName());
+            System.out.println(entry.getName()+" "+entry.exists()+" "+entry.getClass().getSimpleName());
+            entry = entry.getParent().orElse(null);
+        } while (entry != null);
+        Collections.reverse(path);
+        return String.join("/", path);
     }
 
     private static File copyFile(File sourceFile, Folder targetFolder) throws IOException {

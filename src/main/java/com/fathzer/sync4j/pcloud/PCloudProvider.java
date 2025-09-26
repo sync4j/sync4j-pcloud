@@ -2,24 +2,35 @@ package com.fathzer.sync4j.pcloud;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
-import java.util.function.LongConsumer;
 
 import com.fathzer.sync4j.Entry;
-import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.HashAlgorithm;
 import com.fathzer.sync4j.pcloud.internal.api.PCloud;
 import com.fathzer.sync4j.pcloud.internal.api.PCloudAPI;
 import com.pcloud.sdk.RemoteEntry;
-import com.pcloud.sdk.RemoteFile;
-import com.pcloud.sdk.RemoteFolder;
 
+import jakarta.annotation.Nonnull;
+
+/**
+ * pCloud provider for sync4j.
+ * <br>
+ * Please note that:
+ * <ul>
+ * <li>All paths should start with a slash, root folder is "/".</li>
+ * <li>The only supported hash algorithm is SHA1.</li>
+ * </ul>
+ */
 public class PCloudProvider implements FileProvider {
     private final PCloud pcloud;
 
-    public PCloudProvider(Zone zone, String accessToken) throws IOException {
+    /** Constructor.
+     * @param zone the zone to use. See {@link Zone} for available zones.
+     * @param accessToken the access token to use
+     * @throws IOException if an I/O error occurs
+     */
+    public PCloudProvider(@Nonnull Zone zone, @Nonnull String accessToken) throws IOException {
         this.pcloud = new PCloudAPI(zone, accessToken);
     }
 
@@ -34,41 +45,18 @@ public class PCloudProvider implements FileProvider {
     }
 
     @Override
-    public Entry get(String path) throws IOException {
+    public Entry get(@Nonnull String path) throws IOException {
         try {
             RemoteEntry remoteEntry = this.pcloud.get(path);
-            return remoteEntry.isFolder() ? new PcloudFolder(remoteEntry, this, false) : new PcloudFile(remoteEntry, this);
+            return remoteEntry.isFolder() ? new PCloudFolder(remoteEntry, this, false) : new PCloudFile(remoteEntry, this);
         } catch (FileNotFoundException e) {
-            return new PcloudMissingFile(path, this);
+            return new PCloudMissingFile(path, this);
         }
     }
-
-    PcloudFolder getRemoteFolder(long folderId) throws IOException {
-        return new PcloudFolder(this.pcloud.listFolder(folderId, false), this, false);
-    }
-
-    String getHash(RemoteFile remoteFile, HashAlgorithm hashAlgorithm) throws IOException {
-        return this.pcloud.getHash(remoteFile, hashAlgorithm);
-    }
-
-    void delete(RemoteEntry remoteEntry) throws IOException {
-        this.pcloud.delete(remoteEntry);
-    }
-
-    InputStream getInputStream(RemoteFile remoteFile) throws IOException {
-        return this.pcloud.getInputStream(remoteFile);
-    }
-
-    RemoteFolder listFolder(long folderId, boolean recursive) throws IOException {
-        return this.pcloud.listFolder(folderId, recursive);
-    }
-
-    RemoteFile upload(long folderId, String fileName, File content, LongConsumer progressListener) throws IOException {
-        return this.pcloud.upload(folderId, fileName, content.getInputStream(), content.getSize(), content.getLastModified(), content.getCreationTime(), progressListener);
-    }
-
-    RemoteFolder mkdir(long folderId, String folderName) throws IOException {
-        return this.pcloud.mkdir(folderId, folderName);
+    
+    @Nonnull
+    PCloud pCloud() {
+        return this.pcloud;
     }
     
     @Override

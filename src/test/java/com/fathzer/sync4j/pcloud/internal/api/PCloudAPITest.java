@@ -49,7 +49,7 @@ class PCloudAPITest {
 
         try (PCloudAPI api = new PCloudAPI(mockApiClient, "token")) {
             // Test root folder
-            RemoteEntry root = api.get("");
+            RemoteEntry root = api.get("/");
             assertSame(mockRootFolder, root);
            
             // Test error cases
@@ -57,6 +57,9 @@ class PCloudAPITest {
             assertThrows(FileNotFoundException.class, () -> api.get("/toto"));
             assertThrows(FileNotFoundException.class, () -> api.get("/toto/titi.txt"));
             assertThrows(FileNotFoundException.class, () -> api.get("/toto/toto.txt"));
+            
+            assertThrows(NullPointerException.class, () -> api.get(null));
+            assertThrows(IllegalArgumentException.class, () -> api.get(""));
         }
     }
 }

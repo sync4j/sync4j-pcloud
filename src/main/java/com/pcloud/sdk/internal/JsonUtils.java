@@ -7,12 +7,18 @@ import com.google.gson.JsonObject;
 import com.pcloud.sdk.ApiClient;
 import com.pcloud.sdk.RemoteFile;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
+/**
+ * Utility class for parsing RemoteFile instance compatible with the pCloud sdk.
+ */
 public class JsonUtils {
     private static final String PCLOUD_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss Z";
     private static final DateFormat DATE_FORMAT;
@@ -32,9 +38,9 @@ public class JsonUtils {
      * @param jsonObject The JSON object containing the file metadata
      * @param apiClient The ApiClient instance to associate with the file
      * @return A RealRemoteFile instance populated with the metadata
-     * @throws IllegalArgumentException if the JSON object doesn't contain valid file metadata
+     * @throws IOException if parsing fails
      */
-    private static RemoteFile parseFile(JsonObject jsonObject, ApiClient apiClient) {
+    private static RemoteFile parseFile(JsonObject jsonObject, ApiClient apiClient) throws IOException {
         if (jsonObject == null) {
             throw new IllegalArgumentException("JSON object cannot be null");
         }
@@ -45,8 +51,8 @@ public class JsonUtils {
                 .registerTypeAdapter(Date.class, (JsonDeserializer<Date>) (json, typeOfT, context) -> {
                     try {
                         return DATE_FORMAT.parse(json.getAsString());
-                    } catch (Exception e) {
-                        throw new RuntimeException("Failed to parse date: " + json.getAsString(), e);
+                    } catch (ParseException e) {
+                        throw new UncheckedIOException(new IOException(e));
                     }
                 })
                 .create();
@@ -61,19 +67,23 @@ public class JsonUtils {
      * @param jsonObject The JSON object containing the API response
      * @param apiClient The ApiClient instance to associate with the file
      * @return A RealRemoteFile instance for the first file in the metadata array
-     * @throws IllegalArgumentException if the JSON doesn't contain valid file metadata
+     * @throws IOException if parsing fails
      */
-    public static RemoteFile extractFileFromResponse(JsonObject jsonObject, ApiClient apiClient) {
+    public static RemoteFile buildFile(JsonObject jsonObject, ApiClient apiClient) throws IOException {
         if (jsonObject == null || !jsonObject.has("metadata")) {
-            throw new IllegalArgumentException("Invalid response: missing 'metadata' field");
+            throw new IOException("Invalid response: missing 'metadata' field");
         }
 
         var metadataArray = jsonObject.getAsJsonArray("metadata");
         if (metadataArray.isEmpty()) {
-            throw new IllegalArgumentException("No file metadata found in response");
+            throw new IOException("No file metadata found in response");
         }
 
         JsonObject fileJson = metadataArray.get(0).getAsJsonObject();
-        return parseFile(fileJson, apiClient);
+        try {
+            return parseFile(fileJson, apiClient);
+        } catch (UncheckedIOException e) {
+            throw e.getCause();
+        }
     }
 }

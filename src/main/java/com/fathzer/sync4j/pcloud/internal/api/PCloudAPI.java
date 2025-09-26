@@ -31,13 +31,24 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okio.BufferedSink;
 
-//Note IOException encapsulate APIError that are described in the pCloud API documentation (https://docs.pcloud.com/errors/index.html)
+/**
+ * Implementation of the PCloud interface using the pCloud SDK.
+ * <br>
+ * Note: IOException encapsulate APIError that are described in the pCloud API documentation (https://docs.pcloud.com/errors/index.html)
+ */
 public class PCloudAPI implements PCloud {
     private final ApiClient sdk;
     private final URI apiURI;
     private final String token;
     private OkHttpClient httpClient;
 
+    /**
+     * Creates a new PCloudAPI instance.
+     *
+     * @param zone The zone to use for the API client
+     * @param accessToken The access token to use for authentication
+     * @throws IOException if an I/O error occurs or the authentication fails
+     */
     public PCloudAPI(Zone zone, String accessToken) throws IOException {
         this(getApiClient(zone, accessToken), accessToken);
     }
@@ -76,7 +87,7 @@ public class PCloudAPI implements PCloud {
         try {
             return call.call();
         } catch (ApiError e) {
-            System.out.println("API Error: " + e); //TODO remove
+//            System.out.println("API Error: " + e); //TODO remove
             int errorCode = e.errorCode();
             if (errorCode == 2055 || errorCode == 2002) {
                 throw new FileNotFoundException(e.errorMessage());
@@ -94,6 +105,9 @@ public class PCloudAPI implements PCloud {
 
     private RemoteEntry getRemoteEntry(String path) throws IOException, ApiError {
         if (path.isEmpty()) {
+            throw new IllegalArgumentException("Path is empty, root folder is '/'");
+        }
+        if ("/".equals(path)) {
             return this.sdk.loadFolder(0).execute();
         }
         RemoteFile entry = this.sdk.loadFile(path).execute();
@@ -187,11 +201,7 @@ public class PCloudAPI implements PCloud {
 	        Request request = builder(apiURI.resolve("uploadfile"))
 	                .post(requestBody)
 	                .build();
-            try {
-                return JsonUtils.extractFileFromResponse(getJson(request), this.sdk);
-            } catch (IOException e) {
-                throw new IOException(e);
-            }
+            return JsonUtils.buildFile(getJson(request), this.sdk);
         }
     }
 

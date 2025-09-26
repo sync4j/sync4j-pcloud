@@ -8,12 +8,15 @@ import com.fathzer.sync4j.Entry;
 import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.Folder;
 import com.pcloud.sdk.RemoteEntry;
+import com.pcloud.sdk.RemoteFile;
 import com.pcloud.sdk.RemoteFolder;
 
-class PcloudFolder extends PcloudEntry implements Folder {
+import jakarta.annotation.Nonnull;
+
+class PCloudFolder extends PCloudEntry implements Folder {
     private boolean recursivlyLoaded;
 
-    PcloudFolder(RemoteEntry remoteEntry, PCloudProvider provider, boolean recursivlyLoaded) {
+    PCloudFolder(@Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider, boolean recursivlyLoaded) {
         super(remoteEntry, provider);
         if (!remoteEntry.isFolder()) {
             throw new IllegalArgumentException("Not a folder");
@@ -37,7 +40,7 @@ class PcloudFolder extends PcloudEntry implements Folder {
             throw new IllegalArgumentException("Not a directory");
         }
         if (!this.recursivlyLoaded) {
-            remoteEntry = provider.listFolder(remoteEntry.asFolder().folderId(), true);
+            remoteEntry = provider.pCloud().listFolder(remoteEntry.asFolder().folderId(), true);
             this.recursivlyLoaded = true;
         }
         return this;
@@ -49,29 +52,33 @@ class PcloudFolder extends PcloudEntry implements Folder {
             throw new IllegalArgumentException("Not a directory");
         }
         if (!this.recursivlyLoaded) {
-            remoteEntry = provider.listFolder(remoteEntry.asFolder().folderId(), false);
+            remoteEntry = provider.pCloud().listFolder(remoteEntry.asFolder().folderId(), false);
         }
         return remoteEntry.asFolder().children().stream()
                 .map(f -> (Entry)createEntry(f))
                 .toList();
     }
 
-    private PcloudEntry createEntry(RemoteEntry remoteEntry) {
+    private PCloudEntry createEntry(RemoteEntry remoteEntry) {
         if (remoteEntry.isFile()) {
-            return new PcloudFile(remoteEntry, provider);
+            return new PCloudFile(remoteEntry, provider);
         } else {
-            return new PcloudFolder(remoteEntry, provider, this.recursivlyLoaded);
+            return new PCloudFolder(remoteEntry, provider, this.recursivlyLoaded);
         }
     }
 
     @Override
     public File copy(String fileName, File content, LongConsumer progressListener) throws IOException {
-    	return new PcloudFile(provider.upload(remoteEntry.asFolder().folderId(), fileName, content, progressListener), provider);
+    	return new PCloudFile(upload(remoteEntry.asFolder().folderId(), fileName, content, progressListener), provider);
+    }
+
+    private RemoteFile upload(long folderId, String fileName, File content, LongConsumer progressListener) throws IOException {
+        return provider.pCloud().upload(folderId, fileName, content.getInputStream(), content.getSize(), content.getLastModified(), content.getCreationTime(), progressListener);
     }
 
     @Override
     public Folder mkdir(String folderName) throws IOException {
-        final RemoteFolder remoteFolder = provider.mkdir(remoteEntry.asFolder().folderId(), folderName);
-        return new PcloudFolder(remoteFolder, provider, false);
+        final RemoteFolder remoteFolder = provider.pCloud().mkdir(remoteEntry.asFolder().folderId(), folderName);
+        return new PCloudFolder(remoteFolder, provider, false);
     }
 }
