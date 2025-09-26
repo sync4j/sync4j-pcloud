@@ -58,12 +58,12 @@ abstract class PCloudEntry implements Entry {
     }
 
     @Override
-    public String toString() {
-        return remoteEntry.toString();
+    public void delete() throws IOException {
+        provider.pCloud().delete(remoteEntry);
     }
 
     @Override
-    public void delete() throws IOException {
-        provider.pCloud().delete(remoteEntry);
+    public String toString() {
+        return "pCloud:" + (parentPath == null ? "" : parentPath + "/") + getName();
     }
 }

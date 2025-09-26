@@ -66,4 +66,9 @@ class PCloudMissingFile implements Entry {
     public void delete() {
         // Do nothing, file is already deleted
     }
+
+    @Override
+    public String toString() {
+        return "pCloud:" + path.toAbsolutePath().toString();
+    }
 }
