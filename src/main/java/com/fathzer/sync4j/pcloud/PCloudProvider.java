@@ -39,6 +39,7 @@ public class PCloudProvider implements FileProvider {
 
     @Override
     public List<HashAlgorithm> getSupportedHash() {
+        // SHA1 is the only hash algorithm supported by all pCloud's zones
         return List.of(HashAlgorithm.SHA1);
     }
 
