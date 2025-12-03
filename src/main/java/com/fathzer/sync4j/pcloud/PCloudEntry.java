@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import com.fathzer.sync4j.Entry;
 import com.fathzer.sync4j.FileProvider;
+import com.fathzer.sync4j.Folder;
 import com.fathzer.sync4j.pcloud.internal.PathUtils;
 import com.pcloud.sdk.RemoteEntry;
 
@@ -36,7 +37,7 @@ abstract class PCloudEntry implements Entry {
     }
 
     @Override
-    public Entry getParent() throws IOException {
+    public Folder getParent() throws IOException {
         if (isFolder()) {
             long folderId = remoteEntry.asFolder().folderId();
             if (folderId == 0) {

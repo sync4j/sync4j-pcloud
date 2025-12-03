@@ -27,13 +27,14 @@ Import with Maven:
 ## Usage
 
 ```java
-FileProvider provider = new PCloudProvider(Zone.US, accessToken);
-Entry entry = provider.get("/path/to/file");
-if (entry.isFile()) {
-    File file = entry.asFile();
-}
-if (entry.isFolder()) {
-    Folder folder = entry.asFolder();
+try (FileProvider provider = new PCloudProvider(Zone.US, accessToken)) {
+    Entry entry = provider.get("/path/to/file");
+    if (entry.isFile()) {
+        File file = entry.asFile();
+    }
+    if (entry.isFolder()) {
+        Folder folder = entry.asFolder();
+    }
 }
 ```
 

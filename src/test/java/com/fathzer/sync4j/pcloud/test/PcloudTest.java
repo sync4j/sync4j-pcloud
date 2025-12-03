@@ -17,6 +17,7 @@ import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.Folder;
 import com.fathzer.sync4j.file.LocalProvider;
+import com.fathzer.sync4j.memory.MemoryFileProvider;
 import com.fathzer.sync4j.pcloud.PCloudProvider;
 import com.fathzer.sync4j.pcloud.Zone;
 
@@ -29,7 +30,7 @@ public class PcloudTest {
         final String path = "/PhotosJM/2002";
 
         try (FileProvider provider = new PCloudProvider(Zone.US, accessToken)) {
-            try (FileProvider localProvider = LocalProvider.INSTANCE) {
+            try (FileProvider localProvider = new LocalProvider()) {
                 // Copy from remote to local
             //    Folder localFolder = localProvider.get("/home/jma/tmp").asFolder();
             //    File remoteFile = provider.get("/testFuse.sh").asFile();
@@ -70,10 +71,50 @@ public class PcloudTest {
                 // Folder newFolder = provider.get("/PhotosJM").asFolder().mkdir("new Folder");
                 // System.out.println("New folder created: " + newFolder.getName());
 
-                Entry remoteEntry = provider.get("/PhotosJM/2002/test1/test2/toto.xml");
+                System.out.println("======================================");
+                System.out.println("Folder Structure for: " + provider.getClass().getSimpleName()+":/PhotosJM/2002");
+                System.out.println("--------------------------------------");
+                Entry remoteEntry = provider.get("/PhotosJM/2002");
                 while (remoteEntry != null) {
-                    System.out.println("parentPath: " + remoteEntry.getParentPath()+", name: "+remoteEntry.getName());
+                    System.out.print("parentPath: " + remoteEntry.getParentPath() + ", name: " + remoteEntry.getName());
+                    if (!remoteEntry.exists()) {
+                        System.out.println(" doesn't exist");
+                        break;
+                    }
                     remoteEntry = remoteEntry.getParent();
+                    System.out.println();
+                }
+                
+                try (FileProvider memory = new MemoryFileProvider()) {
+                    System.out.println("======================================");
+                    System.out.println("Folder Structure for: " + memory.getClass().getSimpleName()+":/photosJM/2002");
+                    System.out.println("--------------------------------------");
+                    Folder root = memory.get(MemoryFileProvider.ROOT_PATH).asFolder();
+                    Folder photos = root.mkdir("PhotosJM");
+                    Folder dir = photos.mkdir("2002");
+                    while (dir != null) {
+                        System.out.print("parentPath: " + dir.getParentPath() + ", name: " + dir.getName());
+                        if (!dir.exists()) {
+                            System.out.println(" doesn't exist");
+                            break;
+                        }
+                        dir = dir.getParent();
+                        System.out.println();
+                    }
+                }
+                
+                System.out.println("======================================");
+                System.out.println("Folder Structure for working directory: " + localProvider.getClass().getSimpleName()+":");
+                System.out.println("--------------------------------------");
+                Folder dir = localProvider.get("").asFolder();
+                while (dir != null) {
+                    System.out.print("parentPath: " + dir.getParentPath() + ", name: " + dir.getName());
+                    if (!dir.exists()) {
+                        System.out.println(" doesn't exist");
+                        break;
+                    }
+                    dir = dir.getParent();
+                    System.out.println();
                 }
             }
         }

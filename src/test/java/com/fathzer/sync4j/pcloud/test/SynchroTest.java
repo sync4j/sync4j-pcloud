@@ -1,5 +1,6 @@
 package com.fathzer.sync4j.pcloud.test;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -8,6 +9,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
+import com.fathzer.sync4j.File;
+import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.Folder;
 import com.fathzer.sync4j.HashAlgorithm;
 import com.fathzer.sync4j.file.LocalProvider;
@@ -22,6 +25,10 @@ import com.fathzer.sync4j.sync.parameters.FileComparator;
 
 public class SynchroTest {
     public static void main(String[] args) throws Exception {
+        if (args.length==0) {
+            titi();
+            return;
+        }
         try (Watcher watcher = new Watcher()) {
             SyncParameters params = new SyncParameters()
 //                .dryRun(true)
@@ -39,9 +46,9 @@ public class SynchroTest {
                 .maxComparisonThreads(8)
             ;
 
-            try (PCloudProvider provider = new PCloudProvider(Zone.US, System.getenv("PCLOUD_TOKEN"))) {
-                Folder source = provider.get("/PhotosJM/2002").asFolder();
-                Folder target = LocalProvider.INSTANCE.get("/home/jma/tmp/photosTest/2002").asFolder();
+            try (FileProvider local = new LocalProvider(); FileProvider pCloud = new PCloudProvider(Zone.US, System.getenv("PCLOUD_TOKEN"))) {
+                Folder source = pCloud.get("/PhotosJM/2002").asFolder();
+                Folder target = local.get("/home/jma/tmp/photosTest/2002").asFolder();
                 try (Synchronization synchronizer = new Synchronization(source, target, params)) {
                     watcher.setSynchronizer(synchronizer);
                     final long start = System.currentTimeMillis();
@@ -85,7 +92,7 @@ public class SynchroTest {
         
         @Override
         public void accept(Event event) {
-            switch (event.getStatus()) {
+            switch (event.status()) {
                 case PLANNED:
                     planned.incrementAndGet();
                     break;
@@ -101,8 +108,8 @@ public class SynchroTest {
                     running.decrementAndGet();
                     break;
             }
-            if (event.getAction() instanceof CopyFileAction) {
-                System.out.println(event.getAction()+" "+event.getStatus());
+            if (event.action() instanceof CopyFileAction) {
+                System.out.println(event.action()+" "+event.status());
             }
         }
 

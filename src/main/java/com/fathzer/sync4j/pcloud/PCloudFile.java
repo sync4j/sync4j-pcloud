@@ -29,7 +29,7 @@ class PCloudFile extends PCloudEntry implements File {
     }
 
     @Override
-    public long getLastModified() {
+    public long getLastModifiedTime() {
         return remoteEntry.lastModified().getTime();
     }
 

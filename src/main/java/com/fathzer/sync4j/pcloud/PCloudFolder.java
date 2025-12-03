@@ -77,7 +77,7 @@ class PCloudFolder extends PCloudEntry implements Folder {
     }
 
     private RemoteFile upload(long folderId, String fileName, File content, LongConsumer progressListener) throws IOException {
-        return provider.pCloud().upload(folderId, fileName, content.getInputStream(), content.getSize(), content.getLastModified(), content.getCreationTime(), progressListener);
+        return provider.pCloud().upload(folderId, fileName, content.getInputStream(), content.getSize(), content.getLastModifiedTime(), content.getCreationTime(), progressListener);
     }
 
     @Override

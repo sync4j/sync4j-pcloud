@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 
 import com.fathzer.sync4j.Entry;
 import com.fathzer.sync4j.FileProvider;
+import com.fathzer.sync4j.Folder;
 
 import jakarta.annotation.Nonnull;
 
@@ -39,16 +40,16 @@ class PCloudMissingFile implements Entry {
     }
 
     @Override
-    public Entry getParent() throws IOException {
+    public Folder getParent() throws IOException {
         final Path parent = path.getParent();
         if (parent == null) {
             return null;
         }
         Entry parentEntry = provider.get(parent.toString());
-        if (parentEntry.isFile()) {
-            throw new IOException("Parent is a file");
+        if (!parentEntry.isFolder()) {
+            throw new IOException("Parent is not a folder");
         }
-        return parentEntry;
+        return parentEntry.asFolder();
     }
 
     @Override
