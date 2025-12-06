@@ -32,11 +32,6 @@ abstract class PCloudEntry implements Entry {
     }
 
     @Override
-    public String getParentPath() {
-        return parentPath;
-    }
-
-    @Override
     public Folder getParent() throws IOException {
         if (isFolder()) {
             long folderId = remoteEntry.asFolder().folderId();

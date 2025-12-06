@@ -18,17 +18,12 @@ import com.fathzer.sync4j.pcloud.PCloudProvider;
 import com.fathzer.sync4j.pcloud.Zone;
 import com.fathzer.sync4j.sync.Event;
 import com.fathzer.sync4j.sync.Synchronization;
-import com.fathzer.sync4j.sync.Event.CompareFileAction;
 import com.fathzer.sync4j.sync.Event.CopyFileAction;
 import com.fathzer.sync4j.sync.parameters.SyncParameters;
 import com.fathzer.sync4j.sync.parameters.FileComparator;
 
 public class SynchroTest {
     public static void main(String[] args) throws Exception {
-        if (args.length==0) {
-            titi();
-            return;
-        }
         try (Watcher watcher = new Watcher()) {
             SyncParameters params = new SyncParameters()
 //                .dryRun(true)

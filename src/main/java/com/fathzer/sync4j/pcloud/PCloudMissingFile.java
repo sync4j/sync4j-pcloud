@@ -35,11 +35,6 @@ class PCloudMissingFile implements Entry {
     }
 
     @Override
-    public String getParentPath() {
-        return path.getParent().toString();
-    }
-
-    @Override
     public Folder getParent() throws IOException {
         final Path parent = path.getParent();
         if (parent == null) {
