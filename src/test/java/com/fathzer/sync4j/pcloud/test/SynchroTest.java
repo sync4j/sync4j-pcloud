@@ -1,15 +1,13 @@
 package com.fathzer.sync4j.pcloud.test;
 
-import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
-import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.Folder;
 import com.fathzer.sync4j.HashAlgorithm;
@@ -41,9 +39,9 @@ public class SynchroTest {
                 .maxComparisonThreads(8)
             ;
 
-            try (FileProvider local = new LocalProvider(); FileProvider pCloud = new PCloudProvider(Zone.US, System.getenv("PCLOUD_TOKEN"))) {
+            try (FileProvider local = new LocalProvider(Paths.get("/home/jma/tmp")); FileProvider pCloud = new PCloudProvider(Zone.US, System.getenv("PCLOUD_TOKEN"))) {
                 Folder source = pCloud.get("/PhotosJM/2002").asFolder();
-                Folder target = local.get("/home/jma/tmp/photosTest/2002").asFolder();
+                Folder target = local.get("/PhotosJM/2002").asFolder();
                 try (Synchronization synchronizer = new Synchronization(source, target, params)) {
                     watcher.setSynchronizer(synchronizer);
                     final long start = System.currentTimeMillis();

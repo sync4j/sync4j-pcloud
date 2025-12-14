@@ -7,9 +7,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.fathzer.sync4j.Entry;
@@ -29,111 +26,79 @@ public class PcloudTest {
         final String accessToken = args[0];
         final String path = "/PhotosJM/2002";
 
-        try (FileProvider provider = new PCloudProvider(Zone.US, accessToken)) {
-            try (FileProvider localProvider = new LocalProvider()) {
-                // Copy from remote to local
-                //    Folder localFolder = localProvider.get("/home/jma/tmp").asFolder();
-                //    File remoteFile = provider.get("/testFuse.sh").asFile();
-                //    copyFile(remoteFile, localFolder);
+        try (FileProvider pcloud = new PCloudProvider(Zone.US, accessToken);
+                FileProvider localProvider = new LocalProvider(Paths.get("/home/jma/tmp"));
+                FileProvider memory = new MemoryFileProvider()) {
+            // Copy from remote to local
+            // Folder localFolder = localProvider.get("/home/jma/tmp").asFolder();
+            // File remoteFile = pcloud.get("/testFuse.sh").asFile();
+            // copyFile(remoteFile, localFolder);
 
-                // Copy from local to remote
-                // Folder remoteFolder = provider.get("/test").asFolder();
-                // File localFile = localProvider.get("/home/jma/tmp/photosTest/1998/IMGP7236.jpg").asFile();
-                // File remoteFile = copyFile(localFile, remoteFolder);
+            // Copy from local to remote
+            // Folder remoteFolder = pcloud.get("/test").asFolder();
+            // File localFile = localProvider.get("/home/jma/tmp/photosTest/1998/IMGP7236.jpg").asFile();
+            // remoteFile = copyFile(localFile, remoteFolder);
 
-                // System.out.println(remoteFile);
+            // System.out.println(remoteFile);
 
-                // Read again remote to local
-                //                remoteFile = provider.get("/test2/linked.txt").asFile();
-                //                localFolder = localProvider.get("C:/Users/jeanm/test/reload").asFolder();
-                //                copyFile(remoteFile, localFolder);
+            // Read again remote to local
+            // remoteFile = pcloud.get("/test2/linked.txt").asFile();
+            // localFolder = localProvider.get("C:/Users/jeanm/test/reload").asFolder();
+            // copyFile(remoteFile, localFolder);
 
-                //     Entry entry = provider.get("/testFuse.sh", false);
-                //     System.out.println(entry.getName()+" "+(entry.exists() ? "exists" : "not exists"));
-                //     if (entry.isFile()) {
-                //         read(entry.asFile());
-                //     } else {
-                //         System.out.println("Not a file");
-                //     }
+            //     Entry entry = pcloud.get("/testFuse.sh");
+            //     System.out.println(entry.getName()+" "+(entry.exists() ? "exists" : "not exists"));
+            //     if (entry.isFile()) {
+            //         read(entry.asFile());
+            //     } else {
+            //         System.out.println("Not a file");
+            //     }
 
-                //        printTree(provider, path);
+            //        printTree(pcloud.get(path));
 
-                //     Path localPath = Paths.get("/home/jma/tmp/photosTest/2002/Pict200205010005.jpg");
-                //     System.out.println("SHA1 Hash of file: " + SHA1.computeHash(localPath));
+            //     Path localPath = Paths.get("/home/jma/tmp/photosTest/2002/Pict200205010005.jpg");
+            //     System.out.println("SHA1 Hash of file: " + SHA1.computeHash(localPath));
 
-                //     File remoteFile = provider.get("/PhotosJM/2002/Pict200205010005.jpg", false).asFile();
-                //     System.out.println("SHA1 Hash of remote file: " + remoteFile.getHash(SHA1));
+            //     remoteFile = pcloud.get("/PhotosJM/2002/Pict200205010005.jpg").asFile();
+            //     System.out.println("SHA1 Hash of remote file: " + remoteFile.getHash(SHA1));
 
-                //     Entry remoteFile2 = provider.get("/testFuse.sh", false);
-                //     System.out.println(remoteFile2.getName()+" "+(remoteFile2.exists()?"exists":"not exists"));
-                //        printTree(localProvider, "/home/jma/tmp/photosTest/2002");
+            //     Entry remoteFile2 = pcloud.get("/testFuse.sh");
+            //     System.out.println(remoteFile2.getName()+" "+(remoteFile2.exists()?"exists":"not exists"));
+            //        printTree(localProvider, "/home/jma/tmp/photosTest/2002");
 
-                // Folder newFolder = provider.get("/PhotosJM").asFolder().mkdir("new Folder");
-                // System.out.println("New folder created: " + newFolder.getName());
+            Folder newFolder = pcloud.get("/PhotosJM").asFolder().mkdir("new Folder");
+            System.out.println("New folder created: " + newFolder.getName());
 
-                System.out.println("======================================");
-                System.out.println("Folder Structure for: " + provider.getClass().getSimpleName() + ":/PhotosJM/2002");
-                System.out.println("--------------------------------------");
-                Entry remoteEntry = provider.get("/PhotosJM/2002");
-                while (remoteEntry != null) {
-                    System.out.print(getPath(remoteEntry));
-                    if (!remoteEntry.exists()) {
-                        System.out.println(" doesn't exist");
-                        break;
-                    }
-                    remoteEntry = remoteEntry.getParent();
-                    System.out.println();
-                }
+            printTree(pcloud.get(path));
 
-                try (FileProvider memory = new MemoryFileProvider()) {
-                    System.out.println("======================================");
-                    System.out
-                            .println("Folder Structure for: " + memory.getClass().getSimpleName() + ":/photosJM/2002");
-                    System.out.println("--------------------------------------");
-                    Folder root = memory.get(MemoryFileProvider.ROOT_PATH).asFolder();
-                    Folder photos = root.mkdir("PhotosJM");
-                    Folder dir = photos.mkdir("2002");
-                    while (dir != null) {
-                        System.out.print(getPath(dir));
-                        if (!dir.exists()) {
-                            System.out.println(" doesn't exist");
-                            break;
-                        }
-                        dir = dir.getParent();
-                        System.out.println();
-                    }
-                }
+            Folder dir = memory.get(MemoryFileProvider.ROOT_PATH).asFolder().mkdir("PhotosJM").mkdir("2002");
+            printTree(dir);
 
-                System.out.println("======================================");
-                System.out.println(
-                        "Folder Structure for working directory: " + localProvider.getClass().getSimpleName() + ":");
-                System.out.println("--------------------------------------");
-                Folder dir = localProvider.get("").asFolder();
-                while (dir != null) {
-                    System.out.print(getPath(dir));
-                    if (!dir.exists()) {
-                        System.out.println(" doesn't exist");
-                        break;
-                    }
-                    dir = dir.getParent();
-                    System.out.println();
-                }
-            }
+            printTree(localProvider.get(path));
+        }
+        // Bug tracking
+        try (FileProvider local2 = new LocalProvider(Paths.get(""))) {
+            printTree(local2.get(""));
         }
     }
     
-    private static String getPath(Entry entry) throws IOException {
-        Folder parent = entry.getParent();
-        if (parent == null) {
-            // This is the root entry
-            return "/";
+    private static String getTitle(Entry entry) throws IOException {
+        return "Folder Structure for: " + entry.getFileProvider().getClass().getSimpleName() + ":" + entry.getPath();
+    }
+    
+    private static void printTree(Entry entry) throws IOException {
+        System.out.println("======================================");
+        System.out.println(getTitle(entry));
+        System.out.println("--------------------------------------");
+        while (entry != null) {
+            System.out.print(entry.getPath());
+            if (!entry.exists()) {
+                System.out.println(" doesn't exist");
+                break;
+            }
+            entry = entry.getParent();
+            System.out.println();
         }
-        String parentPath = getPath(parent);
-        // If parent is root, don't add extra slash
-        if ("/".equals(parentPath)) {
-            return "/" + entry.getName();
-        }
-        return parentPath + "/" + entry.getName();
     }
 
     private static File copyFile(File sourceFile, Folder targetFolder) throws IOException {
