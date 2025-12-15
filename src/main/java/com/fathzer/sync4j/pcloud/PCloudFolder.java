@@ -73,6 +73,7 @@ class PCloudFolder extends PCloudEntry implements Folder {
 
     @Override
     public File copy(String fileName, File content, LongConsumer progressListener) throws IOException {
+        provider.checkWriteOperationsAllowed();
     	return new PCloudFile(fullPath(), upload(remoteEntry.asFolder().folderId(), fileName, content, progressListener), provider);
     }
 
@@ -82,6 +83,7 @@ class PCloudFolder extends PCloudEntry implements Folder {
 
     @Override
     public Folder mkdir(String folderName) throws IOException {
+        provider.checkWriteOperationsAllowed();
         final RemoteFolder remoteFolder = provider.pCloud().mkdir(remoteEntry.asFolder().folderId(), folderName);
         return new PCloudFolder(fullPath(), remoteFolder, provider, false);
     }

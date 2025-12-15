@@ -10,8 +10,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>21</maven.compiler.source>
-    <maven.compiler.target>21</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <!-- Default empty argLine for Surefire. JaCoCo will override this when active (see Magic incantation below) -->
+    <argLine></argLine>
   </properties>
 
   <dependencies>
@@ -55,4 +57,29 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <!-- Magic incantation to make Mockito work with JDK 21+ -->
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>properties</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+            <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+        </configuration>
+      </plugin>
+    </plugins>
+    <!-- End of magic Mockito incantation -->
+  </build>
 </project>

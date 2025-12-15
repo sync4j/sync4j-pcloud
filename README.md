@@ -9,7 +9,7 @@ This is a provider for [sync4j](https://github.com/fathzer/sync4j) that allows t
 
 ## Requirements
 
-- Java 21
+- Java 17
 - A pCloud token.
 
 ## Installation

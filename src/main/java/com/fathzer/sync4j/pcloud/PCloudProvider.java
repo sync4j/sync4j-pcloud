@@ -5,9 +5,10 @@ import java.io.IOException;
 import java.util.List;
 
 import com.fathzer.sync4j.Entry;
-import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.HashAlgorithm;
-import com.fathzer.sync4j.pcloud.internal.PathUtils;
+import com.fathzer.sync4j.helper.AbstractFileProvider;
+
+import com.fathzer.sync4j.helper.PathUtils;
 import com.fathzer.sync4j.pcloud.internal.api.PCloud;
 import com.fathzer.sync4j.pcloud.internal.api.PCloudAPI;
 import com.pcloud.sdk.RemoteEntry;
@@ -22,11 +23,8 @@ import jakarta.annotation.Nonnull;
  * <li>The only supported hash algorithm is SHA1.</li>
  * </ul>
  */
-public class PCloudProvider implements FileProvider {
+public class PCloudProvider extends AbstractFileProvider {
     private final PCloud pcloud;
-
-    /** The root path that can be passed to {@link #get(String)}. */
-    public static final String ROOT_PATH = "";
 
     /** Constructor.
      * @param zone the zone to use. See {@link Zone} for available zones.
@@ -34,18 +32,9 @@ public class PCloudProvider implements FileProvider {
      * @throws IOException if an I/O error occurs
      */
     public PCloudProvider(@Nonnull Zone zone, @Nonnull String accessToken) throws IOException {
-        this.pcloud = new PCloudAPI(zone, accessToken);
-    }
-
-    @Override
-    public List<HashAlgorithm> getSupportedHash() {
         // SHA1 is the only hash algorithm supported by all pCloud's zones
-        return List.of(HashAlgorithm.SHA1);
-    }
-
-    @Override
-    public boolean isFastListSupported() {
-        return true;
+        super(true, List.of(HashAlgorithm.SHA1), true);
+        this.pcloud = new PCloudAPI(zone, accessToken);
     }
 
     @Override
@@ -62,6 +51,10 @@ public class PCloudProvider implements FileProvider {
     @Nonnull
     PCloud pCloud() {
         return this.pcloud;
+    }
+
+    void checkWriteOperationsAllowed() throws IOException {
+        super.checkReadOnly();
     }
     
     @Override

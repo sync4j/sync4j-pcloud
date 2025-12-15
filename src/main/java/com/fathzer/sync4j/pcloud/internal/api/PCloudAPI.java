@@ -8,8 +8,8 @@ import java.util.Objects;
 import java.util.function.LongConsumer;
 
 import com.fathzer.sync4j.HashAlgorithm;
+import com.fathzer.sync4j.helper.PathUtils;
 import com.fathzer.sync4j.pcloud.Zone;
-import com.fathzer.sync4j.pcloud.internal.PathUtils;
 import com.fathzer.sync4j.util.ProgressInputStream;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;

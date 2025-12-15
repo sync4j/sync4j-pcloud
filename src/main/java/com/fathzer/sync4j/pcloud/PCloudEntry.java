@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import com.fathzer.sync4j.Entry;
 import com.fathzer.sync4j.FileProvider;
-import com.fathzer.sync4j.pcloud.internal.PathUtils;
+import com.fathzer.sync4j.helper.PathUtils;
 import com.pcloud.sdk.RemoteEntry;
 
 import jakarta.annotation.Nonnull;
@@ -54,6 +54,7 @@ abstract class PCloudEntry implements Entry {
 
     @Override
     public void delete() throws IOException {
+        provider.checkWriteOperationsAllowed();
         provider.pCloud().delete(remoteEntry);
     }
 
