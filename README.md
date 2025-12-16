@@ -10,7 +10,7 @@ This is a provider for [sync4j](https://github.com/fathzer/sync4j) that allows t
 ## Requirements
 
 - Java 17
-- A pCloud token.
+- A pCloud token (see [here](https://github.com/sync4j/sync4j-pcloud/wiki/How-to-create-a-pCloud-token) to know how to get one).
 
 ## Installation
 
@@ -20,7 +20,7 @@ Import with Maven:
 <dependency>
     <groupId>com.fathzer</groupId>
     <artifactId>sync4j-pcloud</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
 </dependency>
 ```
 
