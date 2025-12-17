@@ -39,7 +39,7 @@ public class SynchroTest {
                 .maxComparisonThreads(8)
             ;
 
-            try (FileProvider local = new LocalProvider(Paths.get("/home/jma/tmp")); FileProvider pCloud = new PCloudProvider(Zone.US, System.getenv("PCLOUD_TOKEN"))) {
+            try (FileProvider local = new LocalProvider(Paths.get("/home/jma/tmp")); FileProvider pCloud = new PCloudProvider(Zone.US, System.getenv("PCLOUD_TOKEN"), "")) {
                 Folder source = pCloud.get("/PhotosJM/2002").asFolder();
                 Folder target = local.get("/PhotosJM/2002").asFolder();
                 try (Synchronization synchronizer = new Synchronization(source, target, params)) {

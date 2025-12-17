@@ -45,7 +45,7 @@ abstract class PCloudEntry implements Entry {
     
     @Override
     public String getName() {
-        return parentPath == null ? PCloudProvider.ROOT_PATH : remoteEntry.name();
+        return parentPath == null ? FileProvider.ROOT_PATH : remoteEntry.name();
     }
 
     RemoteEntry getRemoteEntry() {

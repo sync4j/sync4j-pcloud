@@ -26,7 +26,7 @@ public class PcloudTest {
         final String accessToken = args[0];
         final String path = "/PhotosJM/2002";
 
-        try (FileProvider pcloud = new PCloudProvider(Zone.US, accessToken);
+        try (FileProvider pcloud = new PCloudProvider(Zone.US, accessToken,"");
                 FileProvider localProvider = new LocalProvider(Paths.get("/home/jma/tmp"));
                 FileProvider memory = new MemoryFileProvider()) {
             // Copy from remote to local

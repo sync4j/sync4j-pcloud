@@ -25,23 +25,30 @@ import jakarta.annotation.Nonnull;
  */
 public class PCloudProvider extends AbstractFileProvider {
     private final PCloud pcloud;
+    private final String rootPath;
 
     /** Constructor.
      * @param zone the zone to use. See {@link Zone} for available zones.
      * @param accessToken the access token to use
-     * @throws IOException if an I/O error occurs
+     * @param rootPath the root path to use (e.g. "" for the pcloud account root folder, "/folder" for a subfolder)
+     * @throws IOException if an I/O error occurs or if <code>rootPath</code> is not an existing folder
      */
-    public PCloudProvider(@Nonnull Zone zone, @Nonnull String accessToken) throws IOException {
+    public PCloudProvider(@Nonnull Zone zone, @Nonnull String accessToken, @Nonnull String rootPath) throws IOException {
         // SHA1 is the only hash algorithm supported by all pCloud's zones
         super(true, List.of(HashAlgorithm.SHA1), true);
+        this.checkPath(rootPath);
         this.pcloud = new PCloudAPI(zone, accessToken);
+        this.rootPath = rootPath;
+        if (!rootPath.isEmpty() && !this.pcloud.get(rootPath).isFolder()) {
+            throw new IOException("Root path " + rootPath + " is not a folder");
+        }
     }
 
     @Override
     public Entry get(@Nonnull String path) throws IOException {
         try {
             final String parentPath = PathUtils.getParent(path);
-            RemoteEntry remoteEntry = this.pcloud.get(path);
+            RemoteEntry remoteEntry = this.pcloud.get(this.rootPath + path);
             return remoteEntry.isFolder() ? new PCloudFolder(parentPath, remoteEntry, this, false) : new PCloudFile(parentPath, remoteEntry, this);
         } catch (FileNotFoundException e) {
             return new PCloudMissingFile(path, this);

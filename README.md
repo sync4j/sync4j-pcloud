@@ -38,3 +38,25 @@ try (FileProvider provider = new PCloudProvider(Zone.US, accessToken)) {
 }
 ```
 
+## Running Tests
+
+This project includes integration tests that communicate with the pCloud API.
+These tests require a valid pCloud access token to run.
+
+To execute the full suite of tests including integration tests, you must provide the `pcloud.token` system property:
+
+```bash
+mvn test -Dpcloud.token=YOUR_ACCESS_TOKEN
+```
+
+If the `pcloud.token` property is missing, the integration tests will be automatically skipped.
+
+You can also specify the zone (defaults to `US` if not specified):
+
+```bash
+mvn test -Dpcloud.token=YOUR_ACCESS_TOKEN -Dpcloud.zone=EU
+```
+
+**Note for contributors:** Pull requests from forked repositories do not have access to the repository secrets. Consequently, the integration tests will be skipped in the CI pipeline for these PRs.
+This is a standard security measure. If you want to run these tests, you must do so locally as described above.
+A maintainer can manually run the integration tests for a PR by pushing the PR's branch to this repository.
