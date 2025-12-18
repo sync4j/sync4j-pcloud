@@ -67,10 +67,6 @@ class PCloudFolder extends PCloudEntry implements Folder {
         }
     }
 
-    String fullPath() {
-        return parentPath + "/" + getName();
-    }
-
     @Override
     public File copy(String fileName, File content, LongConsumer progressListener) throws IOException {
         provider.checkWriteOperationsAllowed();

@@ -1,21 +1,19 @@
 package com.fathzer.sync4j.pcloud;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import com.fathzer.sync4j.Entry;
 import com.fathzer.sync4j.FileProvider;
-import com.fathzer.sync4j.Folder;
+import com.fathzer.sync4j.helper.PathUtils;
 
 import jakarta.annotation.Nonnull;
 
 class PCloudMissingFile implements Entry {
-    private final Path path;
+    private final String path;
     private final PCloudProvider provider;
     
     PCloudMissingFile(@Nonnull String fullPath, @Nonnull PCloudProvider provider) {
-        this.path = Paths.get(fullPath);
+        this.path = fullPath;
         this.provider = provider;
     }
 
@@ -35,22 +33,13 @@ class PCloudMissingFile implements Entry {
     }
 
     @Override
-    public Folder getParent() throws IOException {
-        final Path parent = path.getParent();
-        if (parent == null) {
-            return null;
-        }
-        Entry parentEntry = provider.get(parent.toString());
-        if (!parentEntry.isFolder()) {
-            throw new IOException("Parent is not a folder");
-        }
-        return parentEntry.asFolder();
+    public Entry getParent() throws IOException {
+        return provider.get(PathUtils.getParent(path));
     }
 
     @Override
     public String getName() {
-        Path fileName = path.getFileName();
-        return fileName == null ? "" : fileName.toString();
+    	return PathUtils.getName(path);
     }
 
     @Override
@@ -65,6 +54,6 @@ class PCloudMissingFile implements Entry {
 
     @Override
     public String toString() {
-        return "pCloud:" + path.toAbsolutePath().toString();
+        return "pCloud:" + path;
     }
 }

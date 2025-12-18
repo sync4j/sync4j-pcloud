@@ -22,6 +22,7 @@ import com.pcloud.sdk.RemoteFile;
 import com.pcloud.sdk.RemoteFolder;
 import com.pcloud.sdk.internal.JsonUtils;
 import com.pcloud.sdk.Authenticators;
+import com.pcloud.sdk.Call;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -167,7 +168,7 @@ public class PCloudAPI implements PCloud {
         builder.addFormDataPart("mtime", String.valueOf(mtime/1000));
         builder.addFormDataPart("ctime", String.valueOf(ctime/1000));
         
-        try (InputStream data = new ProgressInputStream(content, progressListener)) {
+        try (InputStream data = progressListener == null ? content : new ProgressInputStream(content, progressListener)) {
 	        // Create RequestBody that properly handles InputStream with known length
 	        RequestBody fileBody = new RequestBody() {
 	            @Override
@@ -210,7 +211,8 @@ public class PCloudAPI implements PCloud {
 
     @Override
     public void delete(RemoteEntry remoteEntry) throws IOException {
-        final boolean deleted = execute(() -> this.sdk.delete(remoteEntry).execute());
+        Call<Boolean> delete = remoteEntry.isFolder() ? this.sdk.deleteFolder(remoteEntry.asFolder(), true) : this.sdk.delete(remoteEntry.asFile());
+        final boolean deleted = execute(delete::execute);
         if (!deleted) {
             throw new IOException("Failed to delete file: " + remoteEntry);
         }

@@ -49,12 +49,13 @@ public interface PCloud extends AutoCloseable {
 
     /**
      * Delete a remote entry.
+     * <br>If the entry is a folder, it is deleted recursively.
      * @param remoteEntry the remote entry to delete
      * @throws IOException if an I/O error occurs
      */
     void delete(RemoteEntry remoteEntry) throws IOException;
 
-        /**
+    /**
      * Upload a file to a remote folder.
      * @param folderId the ID of the remote folder
      * @param fileName the name of the file to upload

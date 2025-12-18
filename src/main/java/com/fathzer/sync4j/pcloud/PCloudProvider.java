@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.fathzer.sync4j.Entry;
+import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.HashAlgorithm;
 import com.fathzer.sync4j.helper.AbstractFileProvider;
 
@@ -47,7 +48,8 @@ public class PCloudProvider extends AbstractFileProvider {
     @Override
     public Entry get(@Nonnull String path) throws IOException {
         try {
-            final String parentPath = PathUtils.getParent(path);
+            this.checkPath(path);
+            final String parentPath = path.equals(FileProvider.ROOT_PATH) ? null : PathUtils.getParent(path);
             RemoteEntry remoteEntry = this.pcloud.get(this.rootPath + path);
             return remoteEntry.isFolder() ? new PCloudFolder(parentPath, remoteEntry, this, false) : new PCloudFile(parentPath, remoteEntry, this);
         } catch (FileNotFoundException e) {
@@ -58,6 +60,11 @@ public class PCloudProvider extends AbstractFileProvider {
     @Nonnull
     PCloud pCloud() {
         return this.pcloud;
+    }
+
+    @Nonnull
+    boolean isRootPath(@Nonnull String path) {
+        return this.rootPath.equals(path);
     }
 
     void checkWriteOperationsAllowed() throws IOException {

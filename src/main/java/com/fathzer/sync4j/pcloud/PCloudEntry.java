@@ -1,6 +1,7 @@
 package com.fathzer.sync4j.pcloud;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import com.fathzer.sync4j.Entry;
 import com.fathzer.sync4j.FileProvider;
@@ -14,10 +15,11 @@ abstract class PCloudEntry implements Entry {
     protected RemoteEntry remoteEntry;
     protected final PCloudProvider provider;
 
-    protected PCloudEntry(@Nonnull String parentPath, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
+    protected PCloudEntry(String parentPath, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
+    	if (parentPath!=null) provider.checkPath(parentPath);
         this.parentPath = parentPath;
-        this.remoteEntry = remoteEntry;
-        this.provider = provider;
+        this.remoteEntry = Objects.requireNonNull(remoteEntry);
+        this.provider = Objects.requireNonNull(provider);
     }
 
     @Override
@@ -32,11 +34,8 @@ abstract class PCloudEntry implements Entry {
 
     @Override
     public Entry getParent() throws IOException {
-        if (isFolder()) {
-            long folderId = remoteEntry.asFolder().folderId();
-            if (folderId == 0) {
-                return null;
-            }
+        if (isRoot()) {
+            return null;
         }
         final long parentFolderId = remoteEntry.parentFolderId();
         final String gfPath = PathUtils.getParent(this.parentPath);
@@ -51,15 +50,26 @@ abstract class PCloudEntry implements Entry {
     RemoteEntry getRemoteEntry() {
         return remoteEntry;
     }
+    
+    private boolean isRoot() {
+    	return parentPath == null;
+    }
 
     @Override
     public void delete() throws IOException {
         provider.checkWriteOperationsAllowed();
+        if (isRoot()) {
+            throw new IOException("Cannot delete root folder");
+        }
         provider.pCloud().delete(remoteEntry);
+    }
+    
+    String fullPath() {
+        return (parentPath == null ? "" : parentPath+ "/") + getName();
     }
 
     @Override
     public String toString() {
-        return "pCloud:" + (parentPath == null ? "" : parentPath + "/") + getName();
+        return "pCloud:" + fullPath();
     }
 }
