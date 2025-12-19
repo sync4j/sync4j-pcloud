@@ -12,11 +12,12 @@ import com.pcloud.sdk.RemoteFile;
 import com.pcloud.sdk.RemoteFolder;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 class PCloudFolder extends PCloudEntry implements Folder {
     private boolean recursivlyLoaded;
 
-    PCloudFolder(@Nonnull String parentPath, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider, boolean recursivlyLoaded) {
+    PCloudFolder(@Nullable String parentPath, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider, boolean recursivlyLoaded) {
         super(parentPath, remoteEntry, provider);
         if (!remoteEntry.isFolder()) {
             throw new IllegalArgumentException("Not a folder");
@@ -70,6 +71,7 @@ class PCloudFolder extends PCloudEntry implements Folder {
     @Override
     public File copy(String fileName, File content, LongConsumer progressListener) throws IOException {
         provider.checkWriteOperationsAllowed();
+        checkFileName(fileName);
     	return new PCloudFile(fullPath(), upload(remoteEntry.asFolder().folderId(), fileName, content, progressListener), provider);
     }
 
@@ -80,6 +82,7 @@ class PCloudFolder extends PCloudEntry implements Folder {
     @Override
     public Folder mkdir(String folderName) throws IOException {
         provider.checkWriteOperationsAllowed();
+        checkFileName(folderName);
         final RemoteFolder remoteFolder = provider.pCloud().mkdir(remoteEntry.asFolder().folderId(), folderName);
         return new PCloudFolder(fullPath(), remoteFolder, provider, false);
     }

@@ -212,10 +212,7 @@ public class PCloudAPI implements PCloud {
     @Override
     public void delete(RemoteEntry remoteEntry) throws IOException {
         Call<Boolean> delete = remoteEntry.isFolder() ? this.sdk.deleteFolder(remoteEntry.asFolder(), true) : this.sdk.delete(remoteEntry.asFile());
-        final boolean deleted = execute(delete::execute);
-        if (!deleted) {
-            throw new IOException("Failed to delete file: " + remoteEntry);
-        }
+        execute(delete::execute);
     }
 
     @Override

@@ -8,10 +8,11 @@ import com.fathzer.sync4j.HashAlgorithm;
 import com.pcloud.sdk.RemoteEntry;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 class PCloudFile extends PCloudEntry implements File {
 
-    PCloudFile(@Nonnull String parentPath, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
+    PCloudFile(@Nullable String parentPath, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
         super(parentPath, remoteEntry, provider);
         if (!remoteEntry.isFile()) {
             throw new IllegalArgumentException("Not a file");

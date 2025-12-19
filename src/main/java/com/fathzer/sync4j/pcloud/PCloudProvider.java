@@ -44,7 +44,17 @@ public class PCloudProvider extends AbstractFileProvider {
             throw new IOException("Root path " + rootPath + " is not a folder");
         }
     }
-
+    
+    @Override
+    public long getCreationTimePrecision() {
+        return 999L;
+    }
+    
+    @Override
+    public long getLastModifiedTimePrecision() {
+        return 999L;
+    }
+    
     @Override
     public Entry get(@Nonnull String path) throws IOException {
         try {
