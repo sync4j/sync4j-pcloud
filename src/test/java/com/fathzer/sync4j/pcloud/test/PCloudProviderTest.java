@@ -1,16 +1,16 @@
 package com.fathzer.sync4j.pcloud.test;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import com.fathzer.sync4j.FileProvider;
+import com.fathzer.sync4j.Folder;
 import com.fathzer.sync4j.pcloud.PCloudProvider;
 import com.fathzer.sync4j.pcloud.Zone;
 import com.fathzer.sync4j.pcloud.internal.api.PCloud;
@@ -28,10 +28,29 @@ class PCloudProviderTest extends AbstractFileProviderTest {
     private RemoteFolder testFolder;
 
     @Test
-    void test() throws IOException {
-        try (PCloudProvider provider = new PCloudProvider(getZone(), System.getProperty("pcloud.token"), "")) {
-        	//TODO check some root properties
+    void testRootAccount() throws IOException {
+        try (PCloudProvider provider = new PCloudProvider(getZone(), getToken(), "")) {
+            //check some root properties on root folder that is the account's root
+            Folder root = provider.get(FileProvider.ROOT_PATH).asFolder();
+            assertTrue(root.exists());
+            assertTrue(root.isFolder());
+            assertEquals("", root.getName());
+            assertNull(root.getParent());
         }
+    }
+
+    @Test
+    void testRootIsNotAFolder() throws IOException {
+        String token = getToken();
+        Zone zone = getZone();
+        String rootPath = "/"+testFolder.name()+"/";
+        assertThrows(IOException.class, () -> new PCloudProvider(zone, token, rootPath+"nonExistingFolder"));
+        root.copy("file.txt", createMockFile("toto"), null);
+        assertThrows(IOException.class, () -> new PCloudProvider(zone, token, rootPath+"file.txt"));
+    }
+    
+    private static String getToken() {
+        return System.getProperty("pcloud.token");
     }
 
     private static Zone getZone() {
@@ -48,11 +67,6 @@ class PCloudProviderTest extends AbstractFileProviderTest {
 
     @Override
     protected FileProvider createFileProvider(TestInfo testInfo) throws IOException {
-    	Optional<Method> method = testInfo.getTestMethod();
-    	String name = method.isPresent() ? method.get().getName() : null;
-//        if (!"testGetParent".equals(name) && !"testGet".equals(name)) {
-//            return null;
-//        }
         assumeFalse(hasCleanupFailure, "Previous test failed to clean up, prevent creating new test folder");
         testFolder = getPCloud().mkdir(0, TEST_FOLDER_PREFIX + System.currentTimeMillis());
         return new PCloudProvider(getZone(), System.getProperty("pcloud.token"), "/"+testFolder.name());
@@ -73,7 +87,6 @@ class PCloudProviderTest extends AbstractFileProviderTest {
 
     @Override
     protected UnderlyingFileSystem getUnderlyingFileSystem() {
-        // TODO
-        return null;
+        return new PCloudFileSystem(getZone(), getToken(), "/"+testFolder.name());
     }
 }
