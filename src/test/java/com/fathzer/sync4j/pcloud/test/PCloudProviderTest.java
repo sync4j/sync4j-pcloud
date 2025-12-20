@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.io.IOException;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -16,6 +17,7 @@ import com.fathzer.sync4j.pcloud.Zone;
 import com.fathzer.sync4j.pcloud.internal.api.PCloud;
 import com.fathzer.sync4j.pcloud.internal.api.PCloudAPI;
 import com.fathzer.sync4j.test.AbstractFileProviderTest;
+import com.fathzer.sync4j.test.UnderlyingFileSystem;
 import com.pcloud.sdk.RemoteFolder;
 
 @EnabledIfSystemProperty(named = "pcloud.token", matches = ".+")
@@ -26,6 +28,13 @@ class PCloudProviderTest extends AbstractFileProviderTest {
     private static boolean hasCleanupFailure;
 
     private RemoteFolder testFolder;
+
+    @AfterAll
+    static void apiCleanup() {
+        if (pcloud != null) {
+            pcloud.close();
+        }
+    }
 
     @Test
     void testRootAccount() throws IOException {
@@ -58,7 +67,6 @@ class PCloudProviderTest extends AbstractFileProviderTest {
     }
 
     private PCloud getPCloud() throws IOException {
-        //TODO close pcloud when done
         if (pcloud == null) {
             pcloud = new PCloudAPI(getZone(), System.getProperty("pcloud.token"));
         }

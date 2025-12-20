@@ -1,7 +1,6 @@
 package com.fathzer.sync4j.pcloud.test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,7 +8,7 @@ import java.io.InputStream;
 import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.helper.PathUtils;
 import com.fathzer.sync4j.pcloud.Zone;
-import com.fathzer.sync4j.test.AbstractFileProviderTest.UnderlyingFileSystem;
+import com.fathzer.sync4j.test.UnderlyingFileSystem;
 import com.pcloud.sdk.ApiClient;
 import com.pcloud.sdk.ApiError;
 import com.pcloud.sdk.Authenticators;
@@ -17,7 +16,6 @@ import com.pcloud.sdk.Call;
 import com.pcloud.sdk.DataSource;
 import com.pcloud.sdk.PCloudSdk;
 import com.pcloud.sdk.RemoteFile;
-import com.pcloud.sdk.RemoteFolder;
 
 class PCloudFileSystem implements UnderlyingFileSystem {
     ApiClient apiClient;
@@ -77,9 +75,16 @@ class PCloudFileSystem implements UnderlyingFileSystem {
     }
 
     @Override
-    public void assertUnderlyingFolderExist(String path) throws IOException {
-        RemoteFolder folder = execute(apiClient.loadFolder(absolute(path)));
-        assertTrue(folder.isFolder(), "Folder " + absolute(path) + " does not exist");
+    public boolean underlyingFolderExists(String path) throws IOException {
+        try {
+            return execute(apiClient.loadFolder(absolute(path))).isFolder();
+        } catch (IOException e) {
+            Throwable cause = e.getCause();
+            // 2005 is the error code for "not found"
+            if ((cause instanceof ApiError error) && error.errorCode() == 2005) {
+                return false;
+            }
+            throw e;
+        }
     }
-
 }
