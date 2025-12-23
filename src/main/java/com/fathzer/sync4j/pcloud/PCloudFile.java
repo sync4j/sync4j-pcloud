@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import com.fathzer.sync4j.File;
+import com.fathzer.sync4j.Folder;
 import com.fathzer.sync4j.HashAlgorithm;
 import com.pcloud.sdk.RemoteEntry;
 
@@ -12,8 +13,8 @@ import jakarta.annotation.Nullable;
 
 class PCloudFile extends PCloudEntry implements File {
 
-    PCloudFile(@Nullable String parentPath, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
-        super(parentPath, remoteEntry, provider);
+    PCloudFile(@Nullable String parentPath, @Nullable Folder parent, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
+        super(parentPath, parent, remoteEntry, provider);
         if (!remoteEntry.isFile()) {
             throw new IllegalArgumentException("Not a file");
         }

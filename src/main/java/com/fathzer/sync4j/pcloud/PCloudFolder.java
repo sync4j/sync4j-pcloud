@@ -17,8 +17,8 @@ import jakarta.annotation.Nullable;
 class PCloudFolder extends PCloudEntry implements Folder {
     private boolean recursivlyLoaded;
 
-    PCloudFolder(@Nullable String parentPath, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider, boolean recursivlyLoaded) {
-        super(parentPath, remoteEntry, provider);
+    PCloudFolder(@Nullable String parentPath, @Nullable Folder parent, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider, boolean recursivlyLoaded) {
+        super(parentPath, parent, remoteEntry, provider);
         if (!remoteEntry.isFolder()) {
             throw new IllegalArgumentException("Not a folder");
         }
@@ -62,9 +62,9 @@ class PCloudFolder extends PCloudEntry implements Folder {
 
     private PCloudEntry createEntry(RemoteEntry remoteEntry) {
         if (remoteEntry.isFile()) {
-            return new PCloudFile(fullPath(), remoteEntry, provider);
+            return new PCloudFile(fullPath(), this, remoteEntry, provider);
         } else {
-            return new PCloudFolder(fullPath(), remoteEntry, provider, this.recursivlyLoaded);
+            return new PCloudFolder(fullPath(), this, remoteEntry, provider, this.recursivlyLoaded);
         }
     }
 
@@ -72,7 +72,7 @@ class PCloudFolder extends PCloudEntry implements Folder {
     public File copy(String fileName, File content, LongConsumer progressListener) throws IOException {
         provider.checkWriteOperationsAllowed();
         checkFileName(fileName);
-    	return new PCloudFile(fullPath(), upload(remoteEntry.asFolder().folderId(), fileName, content, progressListener), provider);
+    	return new PCloudFile(fullPath(), this, upload(remoteEntry.asFolder().folderId(), fileName, content, progressListener), provider);
     }
 
     private RemoteFile upload(long folderId, String fileName, File content, LongConsumer progressListener) throws IOException {
@@ -84,6 +84,6 @@ class PCloudFolder extends PCloudEntry implements Folder {
         provider.checkWriteOperationsAllowed();
         checkFileName(folderName);
         final RemoteFolder remoteFolder = provider.pCloud().mkdir(remoteEntry.asFolder().folderId(), folderName);
-        return new PCloudFolder(fullPath(), remoteFolder, provider, false);
+        return new PCloudFolder(fullPath(), this, remoteFolder, provider, false);
     }
 }

@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import com.fathzer.sync4j.Entry;
 import com.fathzer.sync4j.FileProvider;
+import com.fathzer.sync4j.Folder;
 import com.fathzer.sync4j.helper.PathUtils;
 import com.pcloud.sdk.ApiError;
 import com.pcloud.sdk.RemoteEntry;
@@ -16,12 +17,24 @@ abstract class PCloudEntry implements Entry {
     protected final String parentPath;
     protected RemoteEntry remoteEntry;
     protected final PCloudProvider provider;
+    protected Folder parent;
 
-    protected PCloudEntry(@Nullable String parentPath, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
+    /**
+     * Constructor.
+     * @param parentPath the path of the parent folder, null if the entry is the root.
+     * @param parent the parent entry, null if the parent entry is unknown (typically if created by a direct get) or if the entry is the root.
+     * @param remoteEntry the remote entry.
+     * @param provider the provider.
+     */
+    protected PCloudEntry(@Nullable String parentPath , @Nullable Folder parent, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
     	if (parentPath!=null) {
             provider.checkPath(parentPath);
         }
         this.parentPath = parentPath;
+        this.parent = parent;
+        if (isRoot() && parent!=null) {
+            throw new IllegalArgumentException("Parent entry must be null for root entry");
+        }
         this.remoteEntry = Objects.requireNonNull(remoteEntry);
         this.provider = Objects.requireNonNull(provider);
     }
@@ -41,9 +54,12 @@ abstract class PCloudEntry implements Entry {
         if (isRoot()) {
             return null;
         }
-        final long parentFolderId = remoteEntry.parentFolderId();
-        final String gfPath = PathUtils.getParent(this.parentPath);
-        return new PCloudFolder(gfPath, provider.pCloud().listFolder(parentFolderId, false), this.provider, false);
+        if (parent==null) {
+            final long parentFolderId = remoteEntry.parentFolderId();
+            final String gfPath = PathUtils.getParent(this.parentPath);
+            parent = new PCloudFolder(gfPath, null,provider.pCloud().listFolder(parentFolderId, false), this.provider, false);
+        }
+        return parent;
     }
     
     @Override
