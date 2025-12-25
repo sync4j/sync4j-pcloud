@@ -34,15 +34,19 @@ public class PCloudProvider extends AbstractFileProvider {
      * @param rootPath the root path to use (e.g. "" for the pcloud account root folder, "/folder" for a subfolder)
      * @throws IOException if an I/O error occurs or if <code>rootPath</code> is not an existing folder
      */
-    public PCloudProvider(@Nonnull Zone zone, @Nonnull String accessToken, @Nonnull String rootPath)
-            throws IOException {
+    public PCloudProvider(@Nonnull Zone zone, @Nonnull String accessToken, @Nonnull String rootPath) throws IOException {
         // SHA1 is the only hash algorithm supported by all pCloud's zones
         super(true, List.of(HashAlgorithm.SHA1), true);
         this.checkPath(rootPath);
-        this.pcloud = new PCloudAPI(zone, accessToken);
         this.rootPath = rootPath;
-        if (!this.pcloud.get(rootPath).isFolder()) {
-            throw new IOException("Root path " + rootPath + " is not a folder");
+        this.pcloud = new PCloudAPI(zone, accessToken);
+        try {
+            if (!this.pcloud.get(rootPath).isFolder()) {
+                throw new IOException("Root path " + rootPath + " is not a folder");
+            }            
+        } catch (IOException e) {
+            this.pcloud.close();
+            throw e;
         }
     }
     
