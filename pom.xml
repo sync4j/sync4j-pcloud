@@ -8,6 +8,15 @@
   <artifactId>sync4j-pcloud</artifactId>
   <version>0.0.1</version>
 
+  <name>sync4j-pcloud</name>
+  <description>Sync4j PCloud</description>
+  <url>https://github.com/sync4j/sync4j-pcloud</url>
+
+  <scm>
+    <url>https://github.com/sync4j/sync4j-pcloud.git</url>
+    <connection>https://github.com/sync4j/sync4j-pcloud.git</connection>
+  </scm>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>17</maven.compiler.source>
