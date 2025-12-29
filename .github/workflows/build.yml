@@ -32,8 +32,10 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Build and tests
         env:
-          PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}  # Optional: PCloud token for integration tests
-        run: mvn -B org.jacoco:jacoco-maven-plugin:prepare-agent test org.jacoco:jacoco-maven-plugin:report -Dpcloud.token=$PCLOUD_TOKEN
+          # Note: PCLOUD_TOKEN may not be available in fork PRs - this is expected
+          # Tests will skip integration tests when token is unavailable
+          PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
+        run: mvn -B org.jacoco:jacoco-maven-plugin:prepare-agent test org.jacoco:jacoco-maven-plugin:report -Dpcloud.token=${PCLOUD_TOKEN:-}
 
       - name: SonarCloud analysis
         if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
