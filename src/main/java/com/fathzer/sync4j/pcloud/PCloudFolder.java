@@ -17,6 +17,14 @@ import jakarta.annotation.Nullable;
 class PCloudFolder extends PCloudEntry implements Folder {
     private boolean recursivlyLoaded;
 
+    /**
+     * Constructor.
+     * @param parentPath the path of the parent folder, null if the entry is the root.
+     * @param parent the parent entry, null if the parent entry is unknown (typically if created by a direct get) or if the entry is the root.
+     * @param remoteEntry the remote entry.
+     * @param provider the provider.
+     * @throws IllegalArgumentException if parentPath is invalid or, parentPath is null and parent != null
+     */
     PCloudFolder(@Nullable String parentPath, @Nullable Folder parent, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider, boolean recursivlyLoaded) {
         super(parentPath, parent, remoteEntry, provider);
         if (!remoteEntry.isFolder()) {
