@@ -1,0 +1,83 @@
+<project xmlns="https://maven.apache.org/POM/4.0.0" xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.fathzer</groupId>
+    <artifactId>parent-pom</artifactId>
+    <version>1.1.0</version>
+  </parent>
+  <artifactId>sync4j-pcloud</artifactId>
+  <version>0.0.1</version>
+
+  <name>sync4j-pcloud</name>
+  <description>Sync4j PCloud</description>
+  <url>https://github.com/sync4j/sync4j-pcloud</url>
+
+  <scm>
+    <url>https://github.com/sync4j/sync4j-pcloud.git</url>
+    <connection>https://github.com/sync4j/sync4j-pcloud.git</connection>
+  </scm>
+
+  <properties>
+    <sonar.organization>sync4j</sonar.organization>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <!-- Default empty argLine for Surefire. JaCoCo will override this when active (see Magic incantation below) -->
+    <argLine></argLine>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.pcloud.sdk</groupId>
+      <artifactId>java-core</artifactId>
+      <version>1.11.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.13.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fathzer</groupId>
+      <artifactId>sync4j</artifactId>
+      <version>0.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
+      <version>2.1.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fathzer</groupId>
+      <artifactId>sync4j-test-utils</artifactId>
+      <version>0.0.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Magic incantation to make Mockito work with JDK 21+ -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>properties</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+            <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+        </configuration>
+      </plugin>
+      <!-- End of magic Mockito incantation -->
+    </plugins>
+  </build>
+</project>
