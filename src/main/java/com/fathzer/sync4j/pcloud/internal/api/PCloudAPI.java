@@ -117,10 +117,9 @@ public class PCloudAPI implements PCloud {
     public String getHash(RemoteFile remoteFile, HashAlgorithm hashAlgorithm) throws IOException {
         Objects.requireNonNull(hashAlgorithm);
         if (hashAlgorithm != HashAlgorithm.SHA1) {
-            throw new IllegalArgumentException("Unsupported hash algorithm: " + hashAlgorithm);
+            throw new UnsupportedOperationException("Unsupported hash algorithm: " + hashAlgorithm);
         }
-        final URI fileURI = this.apiURI.resolve("checksumfile?fileid=" + remoteFile.fileId());
-        return getJson(builder(fileURI).build()).get("sha1").getAsString();
+        return execute(() -> sdk.getChecksums(remoteFile.fileId()).execute()).getSha1().hex();
     }
 
     private Builder builder(URI uri) throws IOException {
