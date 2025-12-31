@@ -1,4 +1,4 @@
-package com.fathzer.sync4j.pcloud.test;
+package com.fathzer.sync4j.pcloud;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
@@ -7,7 +7,6 @@ import java.io.InputStream;
 
 import com.fathzer.sync4j.File;
 import com.fathzer.sync4j.helper.PathUtils;
-import com.fathzer.sync4j.pcloud.Zone;
 import com.fathzer.sync4j.test.UnderlyingFileSystem;
 import com.pcloud.sdk.ApiClient;
 import com.pcloud.sdk.ApiError;

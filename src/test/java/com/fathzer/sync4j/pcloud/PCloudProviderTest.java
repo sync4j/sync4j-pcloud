@@ -1,4 +1,4 @@
-package com.fathzer.sync4j.pcloud.test;
+package com.fathzer.sync4j.pcloud;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -12,12 +12,12 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.Folder;
-import com.fathzer.sync4j.pcloud.PCloudProvider;
-import com.fathzer.sync4j.pcloud.Zone;
+
 import com.fathzer.sync4j.pcloud.internal.api.PCloud;
 import com.fathzer.sync4j.pcloud.internal.api.PCloudAPI;
 import com.fathzer.sync4j.test.AbstractFileProviderTest;
 import com.fathzer.sync4j.test.UnderlyingFileSystem;
+
 import com.pcloud.sdk.RemoteFolder;
 
 @EnabledIfSystemProperty(named = "pcloud.token", matches = ".+")
@@ -95,6 +95,6 @@ class PCloudProviderTest extends AbstractFileProviderTest {
 
     @Override
     protected UnderlyingFileSystem getUnderlyingFileSystem() {
-        return new PCloudFileSystem(getZone(), getToken(), "/"+testFolder.name());
+        return new PCloudFileSystem(getZone(), getToken(), "/" + testFolder.name());
     }
 }
