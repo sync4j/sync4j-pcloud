@@ -21,6 +21,9 @@ import com.pcloud.sdk.RemoteEntry;
 import com.pcloud.sdk.RemoteFile;
 import com.pcloud.sdk.RemoteFolder;
 import com.pcloud.sdk.internal.JsonUtils;
+
+import jakarta.annotation.Nonnull;
+
 import com.pcloud.sdk.Authenticators;
 import com.pcloud.sdk.Call;
 
@@ -42,7 +45,7 @@ public class PCloudAPI implements PCloud {
     private final ApiClient sdk;
     private final URI apiURI;
     private final String token;
-    private OkHttpClient httpClient;
+    private final OkHttpClient httpClient;
 
     /**
      * Creates a new PCloudAPI instance.
@@ -51,13 +54,20 @@ public class PCloudAPI implements PCloud {
      * @param accessToken The access token to use for authentication
      * @throws IOException if an I/O error occurs or the authentication fails
      */
-    public PCloudAPI(Zone zone, String accessToken) throws IOException {
-        this(getApiClient(zone, accessToken), accessToken);
+    public PCloudAPI(@Nonnull Zone zone, @Nonnull String accessToken) throws IOException {
+        this.httpClient = new OkHttpClient();
+        this.apiURI = zone.getRootURI();
+        this.token = Objects.requireNonNull(accessToken);
+        this.sdk = getApiClient(zone, accessToken, this.httpClient);
     }
 
-    private static ApiClient getApiClient(Zone zone, String accessToken) throws IOException {
+    private static ApiClient getApiClient(Zone zone, String accessToken, OkHttpClient httpClient) throws IOException {
         final Authenticator authenticator = Authenticators.newOAuthAuthenticator(accessToken);
-        final ApiClient client = PCloudSdk.newClientBuilder().authenticator(authenticator).apiHost(zone.getRootURI().getHost()).create();
+        final ApiClient client = PCloudSdk.newClientBuilder()
+                .withClient(httpClient)
+                .authenticator(authenticator)
+                .apiHost(zone.getRootURI().getHost())
+                .create();
         try {
             execute(() -> client.getUserInfo().execute());
             return client;
@@ -67,16 +77,15 @@ public class PCloudAPI implements PCloud {
         }
     }
 
-    PCloudAPI(ApiClient pCloudSdk, String accessToken) {
+    // Just for tests
+    PCloudAPI(ApiClient pCloudSdk, URI apiURI, String token, OkHttpClient httpClient) {
         this.sdk = pCloudSdk;
-        this.apiURI = URI.create("https://" + this.sdk.apiHost());
-        this.token = accessToken;
+        this.apiURI = apiURI;
+        this.token = token;
+        this.httpClient = httpClient;
     }
 
     private OkHttpClient getClient() {
-        if (this.httpClient == null) {
-            this.httpClient = new OkHttpClient();
-        }
         return this.httpClient;
     }
 
