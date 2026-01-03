@@ -10,19 +10,16 @@ import com.fathzer.sync4j.helper.PathUtils;
 import com.fathzer.sync4j.test.UnderlyingFileSystem;
 import com.pcloud.sdk.ApiClient;
 import com.pcloud.sdk.ApiError;
-import com.pcloud.sdk.Authenticators;
 import com.pcloud.sdk.Call;
 import com.pcloud.sdk.DataSource;
-import com.pcloud.sdk.PCloudSdk;
 import com.pcloud.sdk.RemoteFile;
 
 class PCloudFileSystem implements UnderlyingFileSystem {
     ApiClient apiClient;
     String rootPath;
 
-    public PCloudFileSystem(Zone zone, String accessToken, String rootPath) {
-        this.apiClient = PCloudSdk.newClientBuilder().apiHost(zone.getRootURI().getHost())
-                .authenticator(Authenticators.newOAuthAuthenticator(accessToken)).create();
+    public PCloudFileSystem(ApiClient apiClient, String rootPath) {
+        this.apiClient = apiClient;
         this.rootPath = rootPath;
     }
     

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,8 @@ import com.fathzer.sync4j.pcloud.internal.api.PCloud;
 import com.fathzer.sync4j.pcloud.internal.api.PCloudAPI;
 import com.fathzer.sync4j.test.AbstractFileProviderTest;
 import com.fathzer.sync4j.test.UnderlyingFileSystem;
+
+import com.pcloud.sdk.ApiClient;
 
 import com.pcloud.sdk.RemoteFolder;
 
@@ -66,7 +69,7 @@ class PCloudProviderTest extends AbstractFileProviderTest {
         return Zone.valueOf(System.getProperty("pcloud.zone", "US").toUpperCase());
     }
 
-    private PCloud getPCloud() throws IOException {
+    private static PCloud getPCloud() throws IOException {
         if (pcloud == null) {
             pcloud = new PCloudAPI(getZone(), System.getProperty("pcloud.token"));
         }
@@ -95,6 +98,12 @@ class PCloudProviderTest extends AbstractFileProviderTest {
 
     @Override
     protected UnderlyingFileSystem getUnderlyingFileSystem() {
-        return new PCloudFileSystem(getZone(), getToken(), "/" + testFolder.name());
+    	// Reuse the global file system instance to reduce the number of clients connected to pCloud
+    	try {
+	        ApiClient apiClient = ((PCloudAPI)getPCloud()).getSdk();
+	        return new PCloudFileSystem(apiClient, "/" + testFolder.name());
+    	} catch (IOException e) {
+    		throw new UncheckedIOException(e);
+    	}
     }
 }

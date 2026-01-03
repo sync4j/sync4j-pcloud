@@ -84,9 +84,14 @@ public class PCloudAPI implements PCloud {
         this.token = token;
         this.httpClient = httpClient;
     }
-
-    private OkHttpClient getClient() {
-        return this.httpClient;
+    
+    /**
+     * Gets the underlying pCloud SDK instance.
+     * @return the pCloud SDK instance
+     */
+    @Nonnull
+    public ApiClient getSdk() {
+    	return sdk;
     }
 
     @FunctionalInterface
@@ -98,7 +103,6 @@ public class PCloudAPI implements PCloud {
         try {
             return call.call();
         } catch (ApiError e) {
-//            System.out.println("API Error: " + e); //TODO remove
             int errorCode = e.errorCode();
             if (errorCode == 2055 || errorCode == 2002) {
                 throw new FileNotFoundException(e.errorMessage());
@@ -139,7 +143,7 @@ public class PCloudAPI implements PCloud {
     }
 
     private JsonObject getJson(Request request) throws IOException {
-        try (Response response = this.getClient().newCall(request).execute()) {
+        try (Response response = this.httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Unexpected response " + response + ": " + response.body().string());
             }
