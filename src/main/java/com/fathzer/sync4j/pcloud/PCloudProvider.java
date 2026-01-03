@@ -64,8 +64,11 @@ public class PCloudProvider extends AbstractFileProvider {
     public Entry get(@Nonnull String path) throws IOException {
         try {
             this.checkPath(path);
-            final String parentPath = path.equals(FileProvider.ROOT_PATH) ? null : PathUtils.getParent(path);
-            RemoteEntry remoteEntry = this.pcloud.get(this.rootPath + path);
+            final RemoteEntry remoteEntry = this.pcloud.get(this.rootPath + path);
+            if (FileProvider.ROOT_PATH.equals(path)) {
+                return new PCloudFolder(null, null, remoteEntry, this, false);
+            }
+            final String parentPath = PathUtils.getParent(path);
             return remoteEntry.isFolder() ? new PCloudFolder(parentPath, null, remoteEntry, this, false) : new PCloudFile(parentPath, null, remoteEntry, this);
         } catch (FileNotFoundException e) {
             return new PCloudMissingFile(path, this);

@@ -9,6 +9,9 @@ import com.pcloud.sdk.RemoteEntry;
 import com.pcloud.sdk.RemoteFile;
 import com.pcloud.sdk.RemoteFolder;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 /**
  * Interface to the pCloud API.
  */
@@ -19,7 +22,8 @@ public interface PCloud extends AutoCloseable {
      * @return the remote entry
      * @throws IOException if an I/O error occurs
      */
-    RemoteEntry get(String path) throws IOException;
+	@Nonnull
+    RemoteEntry get(@Nonnull String path) throws IOException;
 
     /**
      * Get the hash of a remote file.
@@ -27,8 +31,10 @@ public interface PCloud extends AutoCloseable {
      * @param hashAlgorithm the hash algorithm
      * @return the hash of the remote file
      * @throws IOException if an I/O error occurs
+     * @throws UnsupportedOperationException if hash is not supported
      */
-    String getHash(RemoteFile remoteFile, HashAlgorithm hashAlgorithm) throws IOException;
+    @Nonnull
+    String getHash(@Nonnull RemoteFile remoteFile, @Nonnull HashAlgorithm hashAlgorithm) throws IOException;
 
     /**
      * Get the input stream of a remote file.
@@ -36,7 +42,8 @@ public interface PCloud extends AutoCloseable {
      * @return the input stream of the remote file
      * @throws IOException if an I/O error occurs
      */
-    InputStream getInputStream(RemoteFile remoteFile) throws IOException;
+    @Nonnull
+    InputStream getInputStream(@Nonnull RemoteFile remoteFile) throws IOException;
 
     /**
      * List the content of a remote folder.
@@ -45,6 +52,7 @@ public interface PCloud extends AutoCloseable {
      * @return the content of the remote folder
      * @throws IOException if an I/O error occurs
      */
+    @Nonnull
     RemoteFolder listFolder(long folderId, boolean recursive) throws IOException;
 
     /**
@@ -53,7 +61,7 @@ public interface PCloud extends AutoCloseable {
      * @param remoteEntry the remote entry to delete
      * @throws IOException if an I/O error occurs
      */
-    void delete(RemoteEntry remoteEntry) throws IOException;
+    void delete(@Nonnull RemoteEntry remoteEntry) throws IOException;
 
     /**
      * Upload a file to a remote folder.
@@ -63,11 +71,12 @@ public interface PCloud extends AutoCloseable {
      * @param size the size of the file to upload
      * @param mtime the modification time of the file to upload
      * @param ctime the creation time of the file to upload
-     * @param progressListener the progress listener
+     * @param progressListener the progress listener, or null if there's no progress listener
      * @return the remote file
      * @throws IOException if an I/O error occurs
      */
-    RemoteFile upload(long folderId, String fileName, InputStream content, long size, long mtime, long ctime, LongConsumer progressListener) throws IOException;
+    @Nonnull
+    RemoteFile upload(long folderId, @Nonnull String fileName, @Nonnull InputStream content, long size, long mtime, long ctime, @Nullable LongConsumer progressListener) throws IOException;
 
     /**
      * Create a remote folder.
@@ -76,7 +85,8 @@ public interface PCloud extends AutoCloseable {
      * @return the remote folder
      * @throws IOException if an I/O error occurs
      */
-    RemoteFolder mkdir(long folderId, String folderName) throws IOException;
+    @Nonnull
+    RemoteFolder mkdir(long folderId, @Nonnull String folderName) throws IOException;
     
     @Override
     void close();

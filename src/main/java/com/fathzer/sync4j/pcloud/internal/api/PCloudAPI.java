@@ -21,6 +21,9 @@ import com.pcloud.sdk.RemoteEntry;
 import com.pcloud.sdk.RemoteFile;
 import com.pcloud.sdk.RemoteFolder;
 import com.pcloud.sdk.internal.JsonUtils;
+
+import jakarta.annotation.Nonnull;
+
 import com.pcloud.sdk.Authenticators;
 import com.pcloud.sdk.Call;
 
@@ -42,7 +45,7 @@ public class PCloudAPI implements PCloud {
     private final ApiClient sdk;
     private final URI apiURI;
     private final String token;
-    private OkHttpClient httpClient;
+    private final OkHttpClient httpClient;
 
     /**
      * Creates a new PCloudAPI instance.
@@ -51,13 +54,20 @@ public class PCloudAPI implements PCloud {
      * @param accessToken The access token to use for authentication
      * @throws IOException if an I/O error occurs or the authentication fails
      */
-    public PCloudAPI(Zone zone, String accessToken) throws IOException {
-        this(getApiClient(zone, accessToken), accessToken);
+    public PCloudAPI(@Nonnull Zone zone, @Nonnull String accessToken) throws IOException {
+        this.httpClient = new OkHttpClient();
+        this.apiURI = zone.getRootURI();
+        this.token = Objects.requireNonNull(accessToken);
+        this.sdk = getApiClient(zone, accessToken, this.httpClient);
     }
 
-    private static ApiClient getApiClient(Zone zone, String accessToken) throws IOException {
+    private static ApiClient getApiClient(Zone zone, String accessToken, OkHttpClient httpClient) throws IOException {
         final Authenticator authenticator = Authenticators.newOAuthAuthenticator(accessToken);
-        final ApiClient client = PCloudSdk.newClientBuilder().authenticator(authenticator).apiHost(zone.getRootURI().getHost()).create();
+        final ApiClient client = PCloudSdk.newClientBuilder()
+                .withClient(httpClient)
+                .authenticator(authenticator)
+                .apiHost(zone.getRootURI().getHost())
+                .create();
         try {
             execute(() -> client.getUserInfo().execute());
             return client;
@@ -67,17 +77,21 @@ public class PCloudAPI implements PCloud {
         }
     }
 
-    PCloudAPI(ApiClient pCloudSdk, String accessToken) {
+    // Just for tests
+    PCloudAPI(ApiClient pCloudSdk, URI apiURI, String token, OkHttpClient httpClient) {
         this.sdk = pCloudSdk;
-        this.apiURI = URI.create("https://" + this.sdk.apiHost());
-        this.token = accessToken;
+        this.apiURI = apiURI;
+        this.token = token;
+        this.httpClient = httpClient;
     }
-
-    private OkHttpClient getClient() {
-        if (this.httpClient == null) {
-            this.httpClient = new OkHttpClient();
-        }
-        return this.httpClient;
+    
+    /**
+     * Gets the underlying pCloud SDK instance.
+     * @return the pCloud SDK instance
+     */
+    @Nonnull
+    public ApiClient getSdk() {
+    	return sdk;
     }
 
     @FunctionalInterface
@@ -89,7 +103,6 @@ public class PCloudAPI implements PCloud {
         try {
             return call.call();
         } catch (ApiError e) {
-//            System.out.println("API Error: " + e); //TODO remove
             int errorCode = e.errorCode();
             if (errorCode == 2055 || errorCode == 2002) {
                 throw new FileNotFoundException(e.errorMessage());
@@ -117,10 +130,9 @@ public class PCloudAPI implements PCloud {
     public String getHash(RemoteFile remoteFile, HashAlgorithm hashAlgorithm) throws IOException {
         Objects.requireNonNull(hashAlgorithm);
         if (hashAlgorithm != HashAlgorithm.SHA1) {
-            throw new IllegalArgumentException("Unsupported hash algorithm: " + hashAlgorithm);
+            throw new UnsupportedOperationException("Unsupported hash algorithm: " + hashAlgorithm);
         }
-        final URI fileURI = this.apiURI.resolve("checksumfile?fileid=" + remoteFile.fileId());
-        return getJson(builder(fileURI).build()).get("sha1").getAsString();
+        return execute(() -> sdk.getChecksums(remoteFile.fileId()).execute()).getSha1().hex();
     }
 
     private Builder builder(URI uri) throws IOException {
@@ -131,7 +143,7 @@ public class PCloudAPI implements PCloud {
     }
 
     private JsonObject getJson(Request request) throws IOException {
-        try (Response response = this.getClient().newCall(request).execute()) {
+        try (Response response = this.httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Unexpected response " + response + ": " + response.body().string());
             }
