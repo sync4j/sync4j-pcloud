@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.io.UncheckedIOException;
+import java.time.Duration;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,6 @@ import com.fathzer.sync4j.test.AbstractFileProviderTest;
 import com.fathzer.sync4j.test.UnderlyingFileSystem;
 
 import com.pcloud.sdk.ApiClient;
-import com.pcloud.sdk.ApiError;
 import com.pcloud.sdk.RemoteFolder;
 
 @EnabledIfSystemProperty(named = "pcloud.token", matches = ".+")
@@ -96,30 +95,18 @@ class PCloudProviderTest extends AbstractFileProviderTest {
             throw e;
         }
     }
+    
+    @Override
+    protected Duration getConsistencyTimeout() {
+        return Duration.ofSeconds(5);
+    }
 
-    private static void doCleanup(RemoteFolder testFolder) throws IOException {
+    private void doCleanup(RemoteFolder testFolder) throws IOException {
         // Sometime, pCloud API returns 5000 errors when deleting a folder.
         // It is weird, but not totally unexpected, because we use two different SDKs instances to create/delete the
         // test folder and to perform the tests.
         // We can suppose that it is a transient error caused by a "eventually consistency" not yet reached, so we retry a few times.
-        int tryCount = 0;
-        while (true) {
-            try {
-                pcloud.delete(testFolder);
-            } catch (IOException e) {
-                boolean tryAgain = tryCount < 2 && e.getCause() instanceof ApiError apiError && apiError.errorCode() >= 5000;
-                if (!tryAgain) {
-                    throw e;
-                }
-                tryCount++;
-                try {
-                	Thread.sleep(500);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    throw new InterruptedIOException();
-                }
-            }
-        }
+    	doAssert(() -> pcloud.delete(testFolder));
     }
 
     @Override

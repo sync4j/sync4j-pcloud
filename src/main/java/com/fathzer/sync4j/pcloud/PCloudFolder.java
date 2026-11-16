@@ -1,6 +1,7 @@
 package com.fathzer.sync4j.pcloud;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.List;
 import java.util.function.LongConsumer;
 
@@ -91,6 +92,16 @@ class PCloudFolder extends PCloudEntry implements Folder {
     public Folder mkdir(String folderName) throws IOException {
         provider.checkWriteOperationsAllowed();
         checkFileName(folderName);
+        // pCloud accepts a file and a folder with the same name, but a FileProvider exposes a strict tree.
+        // The check is made with a single call by path, whatever the size of this folder. It also saves the creation call if the folder already exists.
+        final String childPath = fullPath() + "/" + folderName;
+        final Entry existing = provider.get(childPath);
+        if (existing.isFile()) {
+            throw new FileAlreadyExistsException(childPath, null, "A file with the same name already exists");
+        } else if (existing.isFolder()) {
+            // mkdir is idempotent
+            return existing.asFolder();
+        }
         final RemoteFolder remoteFolder = provider.pCloud().mkdir(remoteEntry.asFolder().folderId(), folderName);
         return new PCloudFolder(fullPath(), this, remoteFolder, provider, false);
     }

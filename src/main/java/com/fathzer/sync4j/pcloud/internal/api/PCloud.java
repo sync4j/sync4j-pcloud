@@ -80,9 +80,11 @@ public interface PCloud extends AutoCloseable {
 
     /**
      * Create a remote folder.
+     * <br>This method is idempotent: if a folder with the same name already exists, it is returned.
      * @param folderId the ID of the remote folder
      * @param folderName the name of the remote folder to create
      * @return the remote folder
+     * @throws java.nio.file.FileAlreadyExistsException if a file with the same name exists
      * @throws IOException if an I/O error occurs
      */
     @Nonnull

@@ -40,7 +40,7 @@
     <dependency>
       <groupId>com.fathzer</groupId>
       <artifactId>sync4j</artifactId>
-      <version>0.0.1</version>
+      <version>0.0.2</version>
     </dependency>
     <dependency>
       <groupId>jakarta.annotation</groupId>
@@ -51,7 +51,7 @@
     <dependency>
       <groupId>com.fathzer</groupId>
       <artifactId>sync4j-test-utils</artifactId>
-      <version>0.0.1</version>
+      <version>0.0.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

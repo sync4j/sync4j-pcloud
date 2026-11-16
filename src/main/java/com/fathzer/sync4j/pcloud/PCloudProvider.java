@@ -22,6 +22,9 @@ import jakarta.annotation.Nonnull;
  * Please note that:
  * <ul>
  * <li>The only supported hash algorithm is SHA1.</li>
+ * <li>The provider is not strongly consistent: an entry that was just created or deleted may not be visible immediately.</li>
+ * <li>The provider never retries by itself. Transient errors (rate limiting, server errors, timeouts, ...) are reported with a
+ * {@link com.fathzer.sync4j.RetryableIOException}, the synchronization is in charge of retrying.</li>
  * </ul>
  */
 public class PCloudProvider extends AbstractFileProvider {

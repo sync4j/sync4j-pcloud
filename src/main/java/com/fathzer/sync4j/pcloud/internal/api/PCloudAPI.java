@@ -3,11 +3,17 @@ package com.fathzer.sync4j.pcloud.internal.api;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.nio.file.FileAlreadyExistsException;
+import java.time.Duration;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.LongConsumer;
 
 import com.fathzer.sync4j.HashAlgorithm;
+import com.fathzer.sync4j.RetryableIOException;
 import com.fathzer.sync4j.helper.PathUtils;
 import com.fathzer.sync4j.pcloud.Zone;
 import com.fathzer.sync4j.util.ProgressInputStream;
@@ -40,6 +46,16 @@ import okio.BufferedSink;
  * Implementation of the PCloud interface using the pCloud SDK.
  * <br>
  * Note: IOException encapsulate APIError that are described in the pCloud API documentation (https://docs.pcloud.com/errors/index.html)
+ * <br>Errors are reported as described in the {@link com.fathzer.sync4j.FileProvider} contract:
+ * <ul>
+ * <li>{@link RetryableIOException} for transient errors: rate limiting (4xxx), server side errors (5xxx), "safe to retry" errors (19xx),
+ * HTTP 429, 500, 502, 503, 504 and 509 statuses, timeouts and network errors.</li>
+ * <li>{@link FileNotFoundException} if an entry does not exist.</li>
+ * <li>{@link FileAlreadyExistsException} if a folder can't be created because a file with the same name exists.</li>
+ * <li>{@link AuthenticationException} if the token is rejected.</li>
+ * <li>A plain {@link IOException} for any other (definitive) error.</li>
+ * </ul>
+ * This class never retries by itself.
  */
 public class PCloudAPI implements PCloud {
     private final ApiClient sdk;
@@ -103,13 +119,75 @@ public class PCloudAPI implements PCloud {
         try {
             return call.call();
         } catch (ApiError e) {
-            int errorCode = e.errorCode();
-            if (errorCode == 2055 || errorCode == 2002) {
-                throw new FileNotFoundException(e.errorMessage());
-            } else if (errorCode == 2094) {
-                throw new AuthenticationException(e.errorMessage());
-            }
-            throw new IOException(e);
+            throw toIOException(e.errorCode(), e.errorMessage(), e, null);
+        } catch (SocketException | SocketTimeoutException e) {
+            // Network glitch (connection reset or refused, timeout, ...)
+            throw new RetryableIOException(e.toString(), e);
+        }
+    }
+
+    /**
+     * Converts a pCloud error to the exception expected by the {@link com.fathzer.sync4j.FileProvider} contract.
+     * <br>Errors are classified by group (see https://docs.pcloud.com/errors/index.html).
+     * @param errorCode the pCloud error code
+     * @param message the error message
+     * @param cause the cause, can be null
+     * @param retryAfter the delay requested by the server, null if none
+     * @return the exception to throw
+     */
+    static IOException toIOException(int errorCode, String message, Throwable cause, Duration retryAfter) {
+        final int group = errorCode / 1000;
+        final IOException result;
+        if (group == 4 || group == 5 || errorCode / 100 == 19) {
+            // 4xxx: rate limiting, 5xxx: server side errors, 19xx: "safe to retry the request later"
+            result = new RetryableIOException(message, cause, retryAfter);
+        } else if (errorCode == 2055 || errorCode == 2002 || errorCode == 2005) {
+            result = new FileNotFoundException(message);
+        } else if (errorCode == 2004) {
+            result = new FileAlreadyExistsException(null, null, message);
+        } else if (errorCode == 2094) {
+            result = new AuthenticationException(message);
+        } else {
+            // Any other error is definitive
+            return cause == null ? new IOException(message) : new IOException(cause);
+        }
+        if (result.getCause() == null && cause != null) {
+            result.initCause(cause);
+        }
+        return result;
+    }
+
+    private static final Set<Integer> RETRYABLE_HTTP_STATUS = Set.of(429, 500, 502, 503, 504, 509);
+
+    /**
+     * Converts an unexpected HTTP response to an exception.
+     * @param status the HTTP status
+     * @param body the body of the response
+     * @param retryAfterHeader the value of the Retry-After header, null if the response has no such header
+     * @return the exception to throw
+     */
+    static IOException toIOException(int status, String body, String retryAfterHeader) {
+        final String message = "Unexpected response " + status + ": " + body;
+        if (RETRYABLE_HTTP_STATUS.contains(status)) {
+            return new RetryableIOException(message, null, parseRetryAfter(retryAfterHeader));
+        }
+        return new IOException(message);
+    }
+
+    /**
+     * Parses the value of a Retry-After header.
+     * @param value the value of the header
+     * @return the delay, or null if the value is missing or not a number of seconds (the date format is ignored)
+     */
+    static Duration parseRetryAfter(String value) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            final long seconds = Long.parseLong(value.trim());
+            return seconds < 0 ? null : Duration.ofSeconds(seconds);
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 
@@ -145,14 +223,18 @@ public class PCloudAPI implements PCloud {
     private JsonObject getJson(Request request) throws IOException {
         try (Response response = this.httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Unexpected response " + response + ": " + response.body().string());
+                throw toIOException(response.code(), response.body().string(), response.header("Retry-After"));
             }
             final JsonObject jsonResponse = JsonParser.parseString(response.body().string()).getAsJsonObject();
             // Check for API errors
-            if (jsonResponse.has("error")) {
-                throw new IOException("API error: " + jsonResponse.get("error").getAsString());
+            final int result = jsonResponse.has("result") ? jsonResponse.get("result").getAsInt() : 0;
+            if (result != 0 || jsonResponse.has("error")) {
+                final String message = "API error: " + (jsonResponse.has("error") ? jsonResponse.get("error").getAsString() : result);
+                throw toIOException(result, message, null, parseRetryAfter(response.header("Retry-After")));
             }
             return jsonResponse;
+        } catch (SocketException | SocketTimeoutException e) {
+            throw new RetryableIOException(e.toString(), e);
         }
     }
 
@@ -218,7 +300,21 @@ public class PCloudAPI implements PCloud {
 
     @Override
     public RemoteFolder mkdir(long folderId, String folderName) throws IOException {
-        return execute(() -> this.sdk.createFolder(folderId, folderName).execute());
+        try {
+            return execute(() -> this.sdk.createFolder(folderId, folderName).execute());
+        } catch (FileAlreadyExistsException e) {
+            // mkdir is idempotent: an existing folder is returned, but a file with the same name is an error
+            for (RemoteEntry child : listFolder(folderId, false).children()) {
+                if (child.name().equals(folderName)) {
+                    if (child.isFolder()) {
+                        return child.asFolder();
+                    }
+                    throw (FileAlreadyExistsException) new FileAlreadyExistsException(folderName, null, "A file with the same name exists").initCause(e);
+                }
+            }
+            // The entry that blocked the creation is not visible (yet?)
+            throw e;
+        }
     }
 
     @Override

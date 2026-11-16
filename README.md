@@ -38,6 +38,14 @@ try (FileProvider provider = new PCloudProvider(Zone.US, accessToken)) {
 }
 ```
 
+## Errors
+
+The provider follows the error contract of the [FileProvider](https://github.com/sync4j/sync4j/blob/main/src/main/java/com/fathzer/sync4j/FileProvider.java) interface and never retries by itself (the synchronization does):
+- pCloud rate limiting (4xxx errors), server side errors (5xxx errors), errors that are "safe to retry" (19xx), HTTP 429/500/502/503/504/509 statuses, timeouts and network errors are reported with a `RetryableIOException` (the Retry-After header, if any, is available through `getRetryAfter()`).
+- A missing entry is reported with a `FileNotFoundException`.
+- `Folder.mkdir` is idempotent: it returns the existing folder if there is one, and throws a `FileAlreadyExistsException` if a file has the same name.
+- Any other error is a plain `IOException` (its cause is the pCloud `ApiError`).
+
 ## Running Tests
 
 This project includes integration tests that communicate with the pCloud API.
