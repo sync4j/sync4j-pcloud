@@ -46,6 +46,16 @@ The provider follows the error contract of the [FileProvider](https://github.com
 - `Folder.mkdir` is idempotent: it returns the existing folder if there is one, and throws a `FileAlreadyExistsException` if a file has the same name.
 - Any other error is a plain `IOException` (its cause is the pCloud `ApiError`).
 
+## Use pCloud from a configuration file
+
+This library ships a `FileProviderFactory` (type `pCloud`), declared as a service. A program that reads configuration files with [sync4j-config](https://github.com/sync4j/sync4j-config) (like [sync4j-web](https://github.com/sync4j/sync4j-web)) can use pCloud as soon as this library is on its classpath:
+
+```json
+{ "provider": "pCloud", "path": "/Photos", "config": { "zone": "us", "token": "${PCLOUD_TOKEN}" } }
+```
+
+`zone` is `us` or `eu`, `token` is the access token (it can refer to an environment variable).
+
 ## Running Tests
 
 This project includes integration tests that communicate with the pCloud API.
