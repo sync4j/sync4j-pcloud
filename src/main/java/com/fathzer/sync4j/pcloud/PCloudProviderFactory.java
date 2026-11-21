@@ -17,6 +17,8 @@ import jakarta.annotation.Nonnull;
  */
 public class PCloudProviderFactory implements FileProviderFactory<PCloudConfig> {
     /** The type of the provider, the <code>provider</code> attribute of a location of a configuration. */
+    // False positive: TYPE is not a clash with type(), it is the value that type() returns
+    @SuppressWarnings("java:S1845")
     public static final String TYPE = "pCloud";
 
     @Override

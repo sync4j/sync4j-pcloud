@@ -57,7 +57,7 @@ class PCloudProviderFactoryTest {
         loader.forEach(factories::add);
 
         // The ones of sync4j (local, memory) and this one
-        assertTrue(factories.stream().anyMatch(f -> f instanceof PCloudProviderFactory), factories.toString());
+        assertTrue(factories.stream().anyMatch(PCloudProviderFactory.class::isInstance), factories.toString());
         assertEquals(1, factories.stream().filter(f -> f.type().equals("pCloud")).count());
     }
 }

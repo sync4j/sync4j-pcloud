@@ -27,11 +27,13 @@ abstract class PCloudEntry implements Entry {
      * @param provider the provider.
      * @throws IllegalArgumentException if parentPath is invalid or, parentPath is null and parent != null
      */
+    // False positive: the IllegalArgumentException is the documented check of the arguments, and every caller that passes a parent passes its non null path
+    @SuppressWarnings("javabugs:S6416")
     protected PCloudEntry(@Nullable String parentPath , @Nullable Folder parent, @Nonnull RemoteEntry remoteEntry, @Nonnull PCloudProvider provider) {
     	if (parentPath!=null) {
             provider.checkPath(parentPath);
         } else if (parent!=null) {
-            throw new IllegalArgumentException("Parent entry must be null if parent is null");
+            throw new IllegalArgumentException("Parent entry must be null if parentPath is null");
         }
         this.parentPath = parentPath;
         this.parent = parent;

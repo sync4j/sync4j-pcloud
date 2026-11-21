@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import com.fathzer.sync4j.Entry;
 import com.fathzer.sync4j.Folder;
 import com.fathzer.sync4j.pcloud.internal.api.PCloud;
-import com.pcloud.sdk.RemoteEntry;
 import com.pcloud.sdk.RemoteFolder;
 
 class PCloudFolderTest {

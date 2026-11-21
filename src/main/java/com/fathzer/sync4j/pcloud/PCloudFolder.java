@@ -94,6 +94,8 @@ class PCloudFolder extends PCloudEntry implements Folder {
         checkFileName(folderName);
         // pCloud accepts a file and a folder with the same name, but a FileProvider exposes a strict tree.
         // The check is made with a single call by path, whatever the size of this folder. It also saves the creation call if the folder already exists.
+        // False positive: "/" is the path separator of the sync4j paths (see FileProvider), it does not depend on the operating system
+        @SuppressWarnings("java:S1075")
         final String childPath = fullPath() + "/" + folderName;
         final Entry existing = provider.get(childPath);
         if (existing.isFile()) {

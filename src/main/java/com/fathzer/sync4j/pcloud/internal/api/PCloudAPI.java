@@ -17,6 +17,7 @@ import com.fathzer.sync4j.RetryableIOException;
 import com.fathzer.sync4j.helper.PathUtils;
 import com.fathzer.sync4j.pcloud.Zone;
 import com.fathzer.sync4j.util.ProgressInputStream;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.pcloud.sdk.ApiClient;
@@ -157,6 +158,7 @@ public class PCloudAPI implements PCloud {
         return result;
     }
 
+    private static final String ERROR_FIELD = "error";
     private static final Set<Integer> RETRYABLE_HTTP_STATUS = Set.of(429, 500, 502, 503, 504, 509);
 
     /**
@@ -228,8 +230,9 @@ public class PCloudAPI implements PCloud {
             final JsonObject jsonResponse = JsonParser.parseString(response.body().string()).getAsJsonObject();
             // Check for API errors
             final int result = jsonResponse.has("result") ? jsonResponse.get("result").getAsInt() : 0;
-            if (result != 0 || jsonResponse.has("error")) {
-                final String message = "API error: " + (jsonResponse.has("error") ? jsonResponse.get("error").getAsString() : result);
+            final JsonElement error = jsonResponse.get(ERROR_FIELD);
+            if (result != 0 || error != null) {
+                final String message = "API error: " + (error != null ? error.getAsString() : result);
                 throw toIOException(result, message, null, parseRetryAfter(response.header("Retry-After")));
             }
             return jsonResponse;
