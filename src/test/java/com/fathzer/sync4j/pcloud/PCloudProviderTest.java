@@ -1,9 +1,11 @@
-package com.fathzer.sync4j.pcloud.test;
+package com.fathzer.sync4j.pcloud;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.time.Duration;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -12,12 +14,13 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import com.fathzer.sync4j.FileProvider;
 import com.fathzer.sync4j.Folder;
-import com.fathzer.sync4j.pcloud.PCloudProvider;
-import com.fathzer.sync4j.pcloud.Zone;
+
 import com.fathzer.sync4j.pcloud.internal.api.PCloud;
 import com.fathzer.sync4j.pcloud.internal.api.PCloudAPI;
 import com.fathzer.sync4j.test.AbstractFileProviderTest;
 import com.fathzer.sync4j.test.UnderlyingFileSystem;
+
+import com.pcloud.sdk.ApiClient;
 import com.pcloud.sdk.RemoteFolder;
 
 @EnabledIfSystemProperty(named = "pcloud.token", matches = ".+")
@@ -66,7 +69,7 @@ class PCloudProviderTest extends AbstractFileProviderTest {
         return Zone.valueOf(System.getProperty("pcloud.zone", "US").toUpperCase());
     }
 
-    private PCloud getPCloud() throws IOException {
+    private static PCloud getPCloud() throws IOException {
         if (pcloud == null) {
             pcloud = new PCloudAPI(getZone(), System.getProperty("pcloud.token"));
         }
@@ -86,15 +89,34 @@ class PCloudProviderTest extends AbstractFileProviderTest {
             return;
         }
         try {
-            pcloud.delete(testFolder);
+            doCleanup(testFolder);
         } catch (IOException e) {
             hasCleanupFailure = true;
             throw e;
         }
     }
+    
+    @Override
+    protected Duration getConsistencyTimeout() {
+        return Duration.ofSeconds(5);
+    }
+
+    private void doCleanup(RemoteFolder testFolder) throws IOException {
+        // Sometime, pCloud API returns 5000 errors when deleting a folder.
+        // It is weird, but not totally unexpected, because we use two different SDKs instances to create/delete the
+        // test folder and to perform the tests.
+        // We can suppose that it is a transient error caused by a "eventually consistency" not yet reached, so we retry a few times.
+    	doAssert(() -> pcloud.delete(testFolder));
+    }
 
     @Override
     protected UnderlyingFileSystem getUnderlyingFileSystem() {
-        return new PCloudFileSystem(getZone(), getToken(), "/"+testFolder.name());
+    	// Reuse the global file system instance to reduce the number of clients connected to pCloud
+    	try {
+	        ApiClient apiClient = ((PCloudAPI)getPCloud()).getSdk();
+	        return new PCloudFileSystem(apiClient, "/" + testFolder.name());
+    	} catch (IOException e) {
+    		throw new UncheckedIOException(e);
+    	}
     }
 }
