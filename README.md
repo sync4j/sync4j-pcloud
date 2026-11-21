@@ -5,7 +5,7 @@
 [![Javadocs](https://www.javadoc.io/badge/com.fathzer/sync4j-pcloud.svg)](https://www.javadoc.io/doc/com.fathzer/sync4j-pcloud)
 [![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=sync4j_sync4j-pcloud&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=sync4j_sync4j-pcloud)
 
-This is a provider for [sync4j](https://github.com/fathzer/sync4j) that allows to synchronize files with [pCloud](https://www.pcloud.com/).
+This is a provider for [sync4j](https://github.com/sync4j/sync4j) that allows to synchronize files with [pCloud](https://www.pcloud.com/).
 
 ## Requirements
 
